@@ -1,16 +1,321 @@
-# React + Vite
+# 🧠 CekTenang — Student Stress Detector
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  <strong>Platform deteksi & manajemen stres mahasiswa berbasis Machine Learning</strong>
+</p>
 
-Currently, two official plugins are available:
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
+  <img src="https://img.shields.io/badge/Python-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/TensorFlow-ML-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="TensorFlow"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/TailwindCSS-Styling-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS"/>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 📋 Tentang Proyek
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**CekTenang** adalah aplikasi web full-stack yang membantu mahasiswa memantau, mendeteksi, dan mengelola tingkat stres mereka secara personal. Dengan memanfaatkan model Machine Learning (TensorFlow + LightGBM), aplikasi ini menganalisis aktivitas harian mahasiswa — mulai dari pola tidur, jam belajar, screen time, hingga kondisi mood — untuk menghasilkan:
 
-## Expanding the ESLint configuration
+- 🎯 **Prediksi level stres** secara real-time (Low / Moderate / High)
+- 📊 **Dashboard interaktif** dengan visualisasi tren stres 7 hari
+- 💡 **AI-generated insights** yang menjelaskan penyebab stres
+- 📝 **Rekomendasi personal** untuk mengurangi stres
+- 📧 **Export laporan** harian & mingguan via email
+- 🌐 **Multi-language support** (Indonesia & English)
+- 🌙 **Dark/Light mode** untuk kenyamanan pengguna
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🏗️ Arsitektur Sistem
+
+```
+┌──────────────────────┐     ┌───────────────────────┐     ┌────────────────────────┐
+│   stress-detector-web│     │  stress-detector-api   │     │  stress-detector-ml    │
+│                      │     │                        │     │                        │
+│   React + Vite       │────▶│  Express.js + Node.js  │────▶│  FastAPI + Python      │
+│   TailwindCSS 4      │     │  PostgreSQL + Redis    │     │  TensorFlow + LightGBM │
+│   React Router       │     │  RabbitMQ + JWT        │     │  Scikit-learn + Pandas  │
+│                      │     │                        │     │                        │
+│   Port: 5173         │     │  Port: 3000            │     │  Port: 8000            │
+└──────────────────────┘     └───────────────────────┘     └────────────────────────┘
+                                      │
+                              ┌───────┴────────┐
+                              │  Docker Compose │
+                              │  • PostgreSQL   │
+                              │  • Redis        │
+                              │  • RabbitMQ     │
+                              └────────────────┘
+```
+
+---
+
+## 📁 Struktur Monorepo
+
+```
+student-stress-detector/
+├── stress-detector-api/       # 🔧 Backend REST API (Node.js + Express)
+│   ├── src/
+│   │   ├── services/          # Business logic (11 service domains)
+│   │   ├── routes/            # Route definitions
+│   │   ├── middlewares/       # Auth, error handling, validation
+│   │   ├── ai/               # ML service client
+│   │   ├── cache/            # Redis caching
+│   │   └── security/         # JWT token management
+│   ├── migrations/            # PostgreSQL migrations (9 files)
+│   ├── swagger.yaml           # OpenAPI 3.0 documentation
+│   └── docker-compose.yml     # Infrastructure containers
+│
+├── stress-detector-web/       # 🌐 Frontend Web App (React + Vite)
+│   ├── src/
+│   │   ├── pages/             # Login, Register, Dashboard, Activities, Reset Password
+│   │   ├── components/        # Reusable UI components (Navbar, Sidebar, Inputs)
+│   │   ├── contexts/          # Language & Theme providers
+│   │   ├── services/          # API communication layer
+│   │   └── styles/            # TailwindCSS styles
+│   └── layouts/               # Page layout templates
+│
+├── stress-detector-ml/        # 🤖 Machine Learning Service (Python + FastAPI)
+│   ├── main.py                # Unified ML API (predict, insights, recommendations)
+│   ├── models/                # Trained models (TensorFlow .keras, scaler, encoder)
+│   ├── artifacts/             # Knowledge base (recommendation & insight engines)
+│   └── requirements.txt       # Python dependencies
+│
+├── shared/                    # 📐 Dokumentasi bersama
+│   ├── Alur Website.png       # Diagram alur website
+│   └── ERD.png                # Entity Relationship Diagram
+│
+└── README.md                  # 📄 Dokumentasi ini
+```
+
+---
+
+## 🚀 Cara Menjalankan
+
+### Prasyarat
+
+| Tool | Versi Minimum |
+|---|---|
+| Node.js | ≥ 18 |
+| Python | ≥ 3.10 |
+| Docker & Docker Compose | Latest |
+| npm | ≥ 9 |
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Zetday/student-stress-detector.git
+cd student-stress-detector
+```
+
+### 2. Jalankan Infrastruktur
+
+```bash
+cd stress-detector-api
+docker-compose up -d
+```
+
+Ini akan menjalankan **PostgreSQL**, **Redis**, dan **RabbitMQ**.
+
+### 3. Setup & Jalankan Backend API
+
+```bash
+cd stress-detector-api
+cp .env.example .env        # Sesuaikan konfigurasi
+npm install
+npm run migrate up          # Jalankan database migration
+npm run start:dev           # Server berjalan di http://localhost:3000
+```
+
+### 4. Setup & Jalankan ML Service
+
+```bash
+cd stress-detector-ml
+python -m venv venv
+source venv/bin/activate    # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+### 5. Setup & Jalankan Frontend Web
+
+```bash
+cd stress-detector-web
+cp .env.example .env        # Pastikan VITE_API_BASE_URL=http://localhost:3000
+npm install
+npm run dev                 # App berjalan di http://localhost:5173
+```
+
+---
+
+## 🌐 Fitur Web Application
+
+### 🔐 Autentikasi
+- **Register** — Daftar akun dengan fullname, email, dan password
+- **Login** — Masuk dengan email & password, mendapat JWT token
+- **Forgot Password** — Kirim link reset password via email
+- **Reset Password** — Atur password baru menggunakan recovery token
+
+### 📊 Dashboard
+- **Stress Score** — Skor stres terkini dengan indikator warna (hijau/kuning/merah)
+- **Metrik Utama** — Jam tidur, durasi olahraga, screen time
+- **Tren 7 Hari** — Grafik bar chart tren stres mingguan
+- **Kondisi Hari Ini** — Progress bar untuk setiap kategori aktivitas
+- **Insight Terbaru** — AI-generated insight dengan border indikator warna
+
+### 📝 Aktivitas Harian
+- Input 13 parameter aktivitas harian:
+  - Jam tidur, jam belajar, screen time, social media
+  - Aktivitas fisik, konsumsi kafein
+  - Skor mood, level kelelahan
+  - Beban tugas, tekanan deadline
+  - Interaksi sosial, kekhawatiran finansial, kondisi kesehatan
+- Otomatis memicu prediksi ML setelah submit
+
+### 🌐 Internasionalisasi
+- Dukungan **Bahasa Indonesia** dan **English**
+- Context-based language switching
+
+### 🌙 Tema
+- **Dark Mode** dan **Light Mode**
+- Persisted theme preference
+
+---
+
+## 🤖 Machine Learning Service
+
+### Model yang Digunakan
+
+| Model | Kegunaan |
+|---|---|
+| **TensorFlow Deep Neural Network** | Klasifikasi level stres (Low / Moderate / High) dengan arsitektur ResidualBlock + FocalLoss |
+| **LightGBM (model_cektenang_lgbm.pkl)** | Model alternatif untuk prediksi stres |
+
+### Endpoints ML Service
+
+| Endpoint | Method | Deskripsi |
+|---|---|---|
+| `/predict` | `POST` | Prediksi level stres berdasarkan 13 fitur aktivitas |
+| `/recommendations` | `POST` | Generate rekomendasi personal berdasarkan level stres & fitur |
+| `/insights` | `POST` | Generate insight harian/mingguan |
+| `/health` | `GET` | Cek status kesehatan semua service ML |
+
+### Fitur Input Model
+
+13 fitur yang dianalisis untuk prediksi:
+
+```
+sleep_hours, study_hours, screen_time_hours, social_media_hours,
+physical_activity_minutes, caffeine_intake_mg, mood_score,
+fatigue_level, assignment_load, deadline_pressure,
+social_interaction_score, financial_worry_score, health_condition_score
+```
+
+---
+
+## 📖 API Documentation
+
+Setelah backend berjalan, akses Swagger UI di:
+
+```
+http://localhost:3000/api-docs
+```
+
+Dokumentasi lengkap mencakup semua **10 resource** dengan total **25+ endpoints**:
+- Users, Authentications, Profiles
+- Activities, Predictions
+- Weekly Summaries, Insights, Recommendations
+- Dashboard, Exports
+
+Lihat [stress-detector-api/README.md](./stress-detector-api/README.md) untuk detail endpoint lengkap.
+
+---
+
+## 🗃️ Database
+
+### Teknologi
+- **PostgreSQL 14** — Database utama
+- **Redis 7** — Caching layer
+- **RabbitMQ** — Message queue untuk async email export
+
+### Entity Relationship Diagram
+
+Lihat diagram ERD lengkap di [`shared/ERD.png`](./shared/ERD.png).
+
+### Tabel Utama
+
+| Tabel | Deskripsi |
+|---|---|
+| `users` | Data akun pengguna |
+| `authentications` | Refresh token storage |
+| `daily_activities` | Input aktivitas harian |
+| `stress_predictions` | Hasil prediksi ML |
+| `weekly_summaries` | Ringkasan metrik mingguan |
+| `insights` | AI-generated insights |
+| `recommendations` | Rekomendasi personal AI |
+
+---
+
+## 🛡️ Keamanan
+
+- **JWT Authentication** — Access token (short-lived) + Refresh token (long-lived)
+- **Password Hashing** — bcrypt dengan salt rounds
+- **Input Validation** — Joi schema validation pada setiap endpoint
+- **Rate Limiting** — express-rate-limit untuk mencegah abuse
+- **CORS** — Konfigurasi cross-origin yang tepat
+- **Secure File Upload** — Validasi tipe file + resize dengan Sharp
+
+---
+
+## 📧 Fitur Export Email
+
+Menggunakan arsitektur **message queue** (RabbitMQ):
+
+1. User request export → API publish message ke RabbitMQ
+2. Background consumer process mengambil message
+3. Consumer mengambil data dari database
+4. Nodemailer mengirim email berformat HTML ke user
+
+Tersedia untuk:
+- **Laporan prediksi harian**
+- **Ringkasan mingguan**
+
+---
+
+## 🧰 Tech Stack Ringkasan
+
+### Backend (stress-detector-api)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+### Frontend (stress-detector-web)
+![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router_7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+
+### Machine Learning (stress-detector-ml)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white)
+
+---
+
+## 👥 Tim Pengembang
+
+Capstone Project — **DBS Camp Dicoding**
+
+---
+
+## 📄 Lisensi
+
+ISC
