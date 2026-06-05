@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "http://localhost:3000";
+const DEFAULT_API_BASE_URL = "https://student-stress-detector-backend-production.up.railway.app";
 
 function normalizeBaseUrl(url) {
   const trimmedUrl = String(url || "").trim();

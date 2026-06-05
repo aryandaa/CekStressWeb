@@ -45,43 +45,54 @@ const getTrendPercentage = (items, selector) => {
   return Math.round(((lastAverage - firstAverage) / firstAverage) * 100);
 };
 
-const formatTemplate = (template, values) =>
-  Object.entries(values).reduce(
-    (result, [key, value]) => result.replaceAll(`{${key}}`, value),
-    template,
-  );
-
 const getPriorityLevel = (condition) => (condition ? "URGENT" : "PENTING");
-
-const normalizeRecommendation = (recommendation, locale) => ({
-  id: recommendation.id,
-  title: recommendation.title || recommendation.category || "Rekomendasi",
-  recommendation_text:
-    recommendation.recommendation_text ||
-    recommendation.description ||
-    "Belum ada detail rekomendasi.",
-  priority_level: recommendation.priority_level || "medium",
-  category: recommendation.category || "Umum",
-  duration: recommendation.created_at
-    ? new Date(recommendation.created_at).toLocaleDateString(locale, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "Dari database",
-  stressImpact: recommendation.category || "Rekomendasi AI",
-});
 
 const normalizeInsight = (insight) => {
   if (!insight) {
     return null;
   }
 
+  const insightText = insight.insight_text ?? insight.insightText ?? insight.description ?? "";
+
   return {
     id: insight.id,
-    insight_text: insight.insight_text || insight.description || "",
+    insight_text: typeof insightText === "string" ? insightText.trim() : "",
     created_at: insight.created_at,
   };
+};
+
+const getInsightFromResponse = (responseData) => {
+  const data = responseData?.data ?? responseData;
+  const insight =
+    data?.insight ??
+    data?.latestInsight ??
+    data?.insights?.[0] ??
+    (Array.isArray(data) ? data[0] : data);
+
+  return normalizeInsight(insight);
+};
+
+const fetchLatestDatabaseInsight = async () => {
+  try {
+    const latestResponse = await api.get("/insights/latest");
+    const latestInsight = getInsightFromResponse(latestResponse.data);
+
+    if (latestInsight?.insight_text) {
+      return latestInsight;
+    }
+  } catch (latestInsightError) {
+    console.warn("Failed to fetch latest insight:", latestInsightError);
+  }
+
+  try {
+    const listResponse = await api.get("/insights", {
+      params: { limit: 1, offset: 0 },
+    });
+    return getInsightFromResponse(listResponse.data);
+  } catch (insightListError) {
+    console.warn("Failed to fetch insights list:", insightListError);
+    return null;
+  }
 };
 
 const buildRecommendations = (latestActivity, weeklySummary) => {
@@ -178,7 +189,6 @@ function InsightPage() {
   const [error, setError] = useState(null);
   const [insightData, setInsightData] = useState(null);
   const [todayRecommendations, setTodayRecommendations] = useState([]);
-  const [longTermRecommendations, setLongTermRecommendations] = useState([]);
   const [narrativeInsight, setNarrativeInsight] = useState(null);
   const [weeklyActivityData, setWeeklyActivityData] = useState([]);
   const [academicConditionData, setAcademicConditionData] = useState([]);
@@ -274,26 +284,8 @@ function InsightPage() {
 
         const generatedRecommendations = buildRecommendations(latestActivity, weeklySummary);
         let latestDatabaseInsight = null;
-        let databaseRecommendations = [];
 
-        try {
-          const insightResponse = await api.get("/insights/latest");
-          latestDatabaseInsight = normalizeInsight(insightResponse.data.data?.insight);
-        } catch (insightError) {
-          console.warn("Failed to fetch latest insight:", insightError);
-        }
-
-        try {
-          const recommendationsResponse = await api.get("/recommendations", {
-            params: { limit: 10, offset: 0 },
-          });
-          databaseRecommendations =
-            recommendationsResponse.data.data?.recommendations?.map((recommendation) =>
-              normalizeRecommendation(recommendation, t.DashboardDateLocale)
-            ) || [];
-        } catch (recommendationError) {
-          console.warn("Failed to fetch recommendations:", recommendationError);
-        }
+        latestDatabaseInsight = await fetchLatestDatabaseInsight();
 
         setInsightData({ latestActivity, weeklySummary, dataCount: latestSevenItems.length });
         setNarrativeInsight(latestDatabaseInsight);
@@ -336,7 +328,6 @@ function InsightPage() {
           },
         ]);
         setTodayRecommendations(generatedRecommendations.filter((rec) => rec.category === "today"));
-        setLongTermRecommendations(databaseRecommendations);
 
       } catch (err) {
         console.error("Failed to fetch insights data:", err);
@@ -441,24 +432,14 @@ function InsightPage() {
     );
   }
 
-  const fallbackInsightDescription = insightData?.latestActivity
-    ? formatTemplate(t.InsightsFallbackWithData, {
-        count: insightData.dataCount,
-        stressScore: insightData.weeklySummary.avgStressScore,
-        sleepHours: insightData.weeklySummary.avgSleepHours.toFixed(1),
-        taskLoad: insightData.weeklySummary.avgAssignmentLoad.toFixed(0),
-        physicalActivity: insightData.weeklySummary.avgPhysicalActivity.toFixed(0),
-      })
-    : t.InsightsFallbackNoData;
-  const latestInsightDescription =
-    narrativeInsight?.insight_text || fallbackInsightDescription;
+  const latestInsightDescription = narrativeInsight?.insight_text || "data belum ada";
   const narrativeSubtitle = narrativeInsight?.created_at
     ? `${t.InsightsLatestFromDatabase} - ${new Date(narrativeInsight.created_at).toLocaleDateString(t.DashboardDateLocale, {
         day: "numeric",
         month: "long",
         year: "numeric",
       })}`
-    : t.AINarrativeInsightSubtitle;
+    : "data belum ada";
 
   return (
     <Layout title={t.InsightsPageTitle} name={user.fullname} role={user.role}>
@@ -531,28 +512,6 @@ function InsightPage() {
           </div>
         </div>
 
-        {/* Section 6: Long-term Suggestions */}
-        <div>
-          <h2 className="theme-text text-2xl font-bold mb-4 mt-8">
-            {t.LongTermTitle}
-          </h2>
-          <div className="grid lg:grid-cols-2 gap-4">
-            {longTermRecommendations.length > 0 ? (
-              longTermRecommendations.map((suggestion, index) => (
-                <PriorityCard
-                  key={index}
-                  title={suggestion.title}
-                  description={suggestion.recommendation_text}
-                  level={suggestion.priority_level}
-                  duration={suggestion.duration}
-                  stressImpact={suggestion.stressImpact}
-                />
-              ))
-            ) : (
-              <div className="col-span-full theme-muted">{t.InsightsNoLongTermSuggestions}</div>
-            )}
-          </div>
-        </div>
       </div>
     </Layout>
   );

@@ -12,7 +12,6 @@ import {
   HeartPulse,
   History,
   LineChart,
-  Mail,
   Menu,
   MessageCircle,
   Moon,
@@ -619,10 +618,6 @@ export default function LandingPage() {
           <div>
             <h3 className="font-bold text-slate-950 dark:text-white">Kontak</h3>
             <div className="mt-4 grid gap-3 text-slate-600 dark:text-slate-300">
-              <a href="mailto:hello@stressdetector.app" className="inline-flex items-center gap-2 transition hover:text-blue-700 dark:hover:text-cyan-300">
-                <Mail size={16} />
-                hello@stressdetector.app
-              </a>
               <a href="https://github.com/Zetday/student-stress-detector" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 transition hover:text-blue-700 dark:hover:text-cyan-300">
                 <GitBranch size={16} />
                 Github Project
