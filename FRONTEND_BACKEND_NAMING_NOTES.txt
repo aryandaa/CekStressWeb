@@ -1,0 +1,372 @@
+CATATAN PENAMAAN DATA FRONTEND <-> BACKEND
+Project: CekTenang / Student Stress Detector
+
+Tujuan file ini:
+Menyamakan nama data yang dipakai frontend dengan kontrak backend supaya halaman lain
+tidak bingung antara nama field untuk request dan response.
+
+
+ATURAN UMUM
+1. Request body dari frontend ke backend pakai camelCase.
+   Contoh: sleepHours, activityDate, refreshToken, targetEmail.
+
+2. Response data yang berasal langsung dari database biasanya balik dalam snake_case.
+   Contoh: sleep_hours, activity_date, stress_score, created_at.
+
+3. Response wrapper backend selalu seperti ini:
+   {
+     code,
+     status,
+     message,
+     data
+   }
+
+4. Endpoint yang butuh login wajib kirim header:
+   Authorization: Bearer <accessToken>
+
+5. Token frontend disimpan di localStorage:
+   accessToken
+   refreshToken
+
+6. Base URL frontend:
+   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
+
+
+AUTHENTICATION
+POST /authentications
+Frontend request:
+  email
+  password
+
+Backend response data:
+  accessToken
+  refreshToken
+
+PUT /authentications
+Frontend request:
+  refreshToken
+
+Backend response data:
+  accessToken
+  refreshToken
+
+DELETE /authentications
+Frontend request:
+  refreshToken
+
+POST /authentications/forgot-password
+Frontend request:
+  email
+
+POST /authentications/reset-password
+Frontend request:
+  token
+  password
+
+
+USERS
+POST /users
+Frontend request:
+  fullname
+  email
+  password
+
+Catatan:
+Frontend register saat ini menerima input "name", tapi ketika dikirim ke backend
+harus diubah menjadi "fullname".
+
+GET /users/:id
+Route param:
+  id
+
+GET /users?email=
+Query param:
+  email
+
+
+PROFILES
+GET /profiles
+Butuh Authorization header.
+
+PUT /profiles
+Frontend request:
+  fullname
+  email
+
+PUT /profiles/password
+Frontend request:
+  oldPassword
+  newPassword
+
+Catatan response profile dari database kemungkinan memakai snake_case untuk field
+database seperti created_at atau updated_at jika ada.
+
+
+ACTIVITIES
+POST /activities
+Frontend request wajib memakai camelCase:
+  activityDate
+  sleepHours
+  studyHours
+  screenTimeHours
+  socialMediaHours
+  physicalActivityMinutes
+  caffeineIntakeMg
+  moodScore
+  fatigueLevel
+  assignmentLoad
+  deadlinePressure
+  socialInteractionScore
+  financialWorryScore
+  healthConditionScore
+
+Backend response data:
+  activity
+  prediction
+  mlAvailable
+
+Field activity yang balik dari backend biasanya snake_case:
+  id
+  user_id
+  activity_date
+  sleep_hours
+  study_hours
+  screen_time_hours
+  social_media_hours
+  physical_activity_minutes
+  caffeine_intake_mg
+  mood_score
+  fatigue_level
+  assignment_load
+  deadline_pressure
+  social_interaction_score
+  financial_worry_score
+  health_condition_score
+  created_at
+
+Field prediction yang balik setelah submit activity biasanya snake_case:
+  id
+  user_id
+  activity_id
+  prediction_date
+  stress_level
+  stress_score
+  confidence_score
+  model_version
+  created_at
+
+GET /activities?limit=&offset=
+Query param:
+  limit
+  offset
+
+Backend response data:
+  activities
+  pagination
+
+GET /activities/:id
+Route param:
+  id
+
+DELETE /activities/:id
+Route param:
+  id
+
+
+PREDICTIONS
+GET /predictions?limit=&offset=
+Query param:
+  limit
+  offset
+
+Backend response data:
+  predictions
+  pagination
+
+GET /predictions/latest
+Backend response data:
+  prediction
+
+Field prediction biasanya snake_case:
+  id
+  user_id
+  activity_id
+  prediction_date
+  stress_level
+  stress_score
+  confidence_score
+  model_version
+  created_at
+
+
+DASHBOARD
+GET /dashboard
+Backend response data memakai camelCase untuk nama object utama:
+  latestPrediction
+  latestWeeklySummary
+  latestInsight
+  latestRecommendation
+  unreadRecommendations
+
+Isi object yang berasal dari database tetap biasanya snake_case.
+Contoh latestPrediction:
+  stress_level
+  stress_score
+  prediction_date
+
+Contoh latestWeeklySummary:
+  week_start
+  week_end
+  average_stress_level
+  average_sleep_hours
+  average_screen_time_hours
+  average_study_hours
+  stress_trend
+
+Contoh latestInsight:
+  insight_text
+  period_type
+  created_at
+
+Contoh latestRecommendation:
+  recommendation_text
+  category
+  is_read
+  created_at
+
+GET /dashboard/trend?days=
+Query param:
+  days
+
+Backend response data:
+  trend
+  days
+
+Field item trend:
+  prediction_date
+  stress_score
+  stress_level
+
+
+WEEKLY SUMMARIES
+GET /weekly-summaries?limit=&offset=
+Query param:
+  limit
+  offset
+
+Backend response data:
+  summaries
+  pagination
+
+GET /weekly-summaries/latest
+Backend response data:
+  summary
+
+POST /weekly-summaries/generate
+Butuh Authorization header.
+
+Field summary biasanya snake_case:
+  id
+  user_id
+  week_start
+  week_end
+  average_stress_level
+  average_sleep_hours
+  average_screen_time_hours
+  average_study_hours
+  stress_trend
+  created_at
+
+
+INSIGHTS
+GET /insights?limit=&offset=
+Query param:
+  limit
+  offset
+
+Backend response data:
+  insights
+  pagination
+
+GET /insights/latest
+Backend response data:
+  insight
+
+Field insight biasanya snake_case:
+  id
+  user_id
+  weekly_summary_id
+  period_type
+  insight_text
+  created_at
+
+
+RECOMMENDATIONS
+GET /recommendations?limit=&offset=
+Query param:
+  limit
+  offset
+
+Backend response data:
+  recommendations
+  pagination
+
+GET /recommendations/latest
+Backend response data:
+  recommendation
+
+Field recommendation biasanya snake_case:
+  id
+  user_id
+  weekly_summary_id
+  period_type
+  category
+  recommendation_text
+  is_read
+  created_at
+
+PATCH /recommendations/:id/read
+Route param:
+  id
+
+Backend response data:
+  recommendation
+
+
+EXPORTS
+POST /exports/daily-prediction
+Frontend request:
+  targetEmail
+
+POST /exports/weekly-summary
+Frontend request:
+  targetEmail
+
+Catatan:
+targetEmail optional. Kalau tidak dikirim, backend memakai email user yang login.
+
+
+SARAN POLA DI FRONTEND
+1. Untuk data form yang dikirim ke backend, ikuti nama camelCase backend.
+   Contoh state form activity:
+   {
+     activityDate,
+     sleepHours,
+     moodScore
+   }
+
+2. Untuk data response, boleh langsung baca snake_case dari backend.
+   Contoh:
+   activity.sleep_hours
+   prediction.stress_score
+   recommendation.recommendation_text
+
+3. Kalau ingin UI lebih rapi, mapping response snake_case ke camelCase boleh dilakukan
+   di file service, bukan di komponen page.
+
+4. Hindari bikin nama field baru di page tanpa mapping jelas.
+   Contoh yang aman:
+   input name="sleepHours" -> backend sleepHours
+
+   Contoh yang perlu mapping:
+   input name="sleep" -> harus diubah menjadi sleepHours sebelum POST.
