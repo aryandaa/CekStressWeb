@@ -3,7 +3,6 @@ import { API_BASE_URL } from "../../api.config";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
 });
 
 api.interceptors.request.use(
