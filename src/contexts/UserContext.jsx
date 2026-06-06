@@ -6,7 +6,6 @@ const UserContext = createContext();
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState({
-    id: "",
     fullname: "",
     email: "",
     role: "",
@@ -21,7 +20,6 @@ export function UserProvider({ children }) {
 
     if (!accessToken) {
       setUser({
-        id: "",
         fullname: "",
         email: "",
         role: "",
@@ -37,7 +35,6 @@ export function UserProvider({ children }) {
 
     if (!result.error) {
       const nextUser = {
-        id: result.data.id || result.data.user_id || result.data.userId || "",
         fullname: result.data.fullname || "",
         email: result.data.email || "",
         role: result.data.role || "",

@@ -20,7 +20,7 @@ function Navbar({ title, isOpen, setIsOpen}) {
         fixed
         top-0
         right-0
-        left-0 md:left-52
+        left-0 md:left-60
         z-30
 
         flex h-15 items-center justify-between

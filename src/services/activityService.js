@@ -59,35 +59,6 @@ export const getActivityById = async (id) => {
   }
 };
 
-export const getPredictionByActivityId = async (activityId) => {
-  try {
-    const response = await api.get("/predictions", {
-      params: {
-        activity_id: activityId,
-        limit: 1000,
-        offset: 0,
-      },
-    });
-    const predictions = response.data.data?.predictions || [];
-    const prediction = predictions.find(
-      (item) => String(item.activity_id ?? item.activityId) === String(activityId),
-    );
-
-    return {
-      error: false,
-      data: prediction || null,
-    };
-  } catch (error) {
-    return {
-      error: true,
-      message:
-        error.response?.data?.message ||
-        error.message ||
-        "Gagal memuat prediksi stres",
-    };
-  }
-};
-
 function normalizeScore(score) {
   const value = Number(score);
 
@@ -104,12 +75,8 @@ function parseDateOnly(dateValue) {
   }
 
   const stringValue = String(dateValue);
-
-  if (stringValue.includes("T")) {
-    return new Date(stringValue);
-  }
-
-  const [year, month, day] = stringValue.slice(0, 10).split("-").map(Number);
+  const dateStr = stringValue.includes("T") ? stringValue.split("T")[0] : stringValue;
+  const [year, month, day] = dateStr.slice(0, 10).split("-").map(Number);
 
   if (!year || !month || !day) {
     return new Date(dateValue);

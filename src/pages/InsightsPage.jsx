@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import AcademicCondition from "../components/Insights/AcademicCondition";
 import AINarrativeCard from "../components/Insights/AINarrativeCard";
 import PriorityCard from "../components/Insights/PriorityCard";
 import StatsCard from "../components/Insights/StatsCard";
@@ -9,327 +10,339 @@ import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
-const COLLECTION_KEYS = {
-  summaries: ["summaries", "items", "rows", "summary"],
-  insights: ["insights", "items", "rows", "insight"],
-  recommendations: ["recommendations", "items", "rows", "recommendation"],
-};
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const getValue = (item, snakeKey, camelKey) => item?.[snakeKey] ?? item?.[camelKey];
-
-const toNumber = (value) => {
+const getNumberField = (data, snakeCaseName, camelCaseName) => {
+  const value = data?.[snakeCaseName] ?? data?.[camelCaseName];
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : 0;
 };
 
-const toDate = (value) => {
-  const date = value ? new Date(value) : null;
-  return date && !Number.isNaN(date.getTime()) ? date : null;
+const getAverage = (items, selector) => {
+  const values = items.map(selector).filter((v) => Number.isFinite(v));
+  if (values.length === 0) return 0;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
 };
 
-const unwrapCollection = (responseData, type) => {
-  const data = responseData?.data ?? responseData;
-
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  for (const key of COLLECTION_KEYS[type]) {
-    const value = data?.[key];
-    if (Array.isArray(value)) {
-      return value;
-    }
-    if (value) {
-      return [value];
-    }
-  }
-
-  return [];
+const getTrendPercentage = (items, selector) => {
+  if (items.length < 2) return 0;
+  const sorted = [...items].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+  const mid = Math.ceil(sorted.length / 2);
+  const firstAvg = getAverage(sorted.slice(0, mid), selector);
+  const lastAvg = getAverage(sorted.slice(mid), selector);
+  if (!firstAvg || !lastAvg) return 0;
+  return Math.round(((lastAvg - firstAvg) / firstAvg) * 100);
 };
 
-const sortNewest = (items) =>
-  [...items].sort((a, b) => {
-    const first = toDate(b.created_at ?? b.createdAt ?? b.updated_at ?? b.updatedAt ?? b.period_end ?? b.periodEnd);
-    const second = toDate(a.created_at ?? a.createdAt ?? a.updated_at ?? a.updatedAt ?? a.period_end ?? a.periodEnd);
-
-    return (first?.getTime() ?? 0) - (second?.getTime() ?? 0);
-  });
-
-const normalizeSummary = (summary) => ({
-  id: summary.id,
-  userId: getValue(summary, "user_id", "userId"),
-  periodEnd: summary.period_end ?? summary.periodEnd ?? summary.week_end ?? summary.weekEnd,
-  avgStressScore: toNumber(
-    summary.avg_stress_score ?? summary.avgStressScore ?? summary.average_stress_level ?? summary.averageStressLevel,
-  ),
-  avgSleepHours: toNumber(
-    summary.avg_sleep_hours ?? summary.avgSleepHours ?? summary.average_sleep_hours ?? summary.averageSleepHours,
-  ),
-  avgAssignmentLoad: toNumber(getValue(summary, "avg_assignment_load", "avgAssignmentLoad")),
-  avgPhysicalActivity: toNumber(getValue(summary, "avg_physical_activity", "avgPhysicalActivity")),
-  daysCount: toNumber(getValue(summary, "days_count", "daysCount")),
-  highStressDays: toNumber(getValue(summary, "high_stress_days", "highStressDays")),
-  mediumStressDays: toNumber(getValue(summary, "medium_stress_days", "mediumStressDays")),
-  lowStressDays: toNumber(getValue(summary, "low_stress_days", "lowStressDays")),
-  dominantStressLevel: getValue(summary, "dominant_stress_level", "dominantStressLevel"),
-  createdAt: getValue(summary, "created_at", "createdAt"),
-  updatedAt: getValue(summary, "updated_at", "updatedAt"),
-});
-
-const normalizeInsight = (insight) => ({
-  id: insight.id,
-  summaryId: insight.summary_id ?? insight.summaryId ?? insight.weekly_summary_id ?? insight.weeklySummaryId,
-  text: getValue(insight, "insight_text", "insightText") ?? "",
-  createdAt: getValue(insight, "created_at", "createdAt"),
-});
-
-const normalizeRecommendation = (recommendation) => ({
-  id: recommendation.id,
-  summaryId:
-    recommendation.summary_id ??
-    recommendation.summaryId ??
-    recommendation.weekly_summary_id ??
-    recommendation.weeklySummaryId,
-  title: recommendation.title ?? "",
-  text: getValue(recommendation, "recommendation_text", "recommendationText") ?? "",
-  level: getValue(recommendation, "priority_level", "priorityLevel") ?? "",
-  createdAt: getValue(recommendation, "created_at", "createdAt"),
-});
-
-const fetchRows = async (endpoint, type, params) => {
-  const response = await api.get(endpoint, { params });
-  return unwrapCollection(response.data, type);
+const formatDateRange = (startStr, endStr, locale) => {
+  if (!startStr || !endStr) return "";
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
+  const opts = { day: "numeric", month: "short", year: "numeric" };
+  return `${start.toLocaleDateString(locale, opts)} – ${end.toLocaleDateString(locale, opts)}`;
 };
 
-const fetchFirstAvailableRows = async (endpoints, type, params) => {
-  let lastError = null;
+// ─── Data fetchers (all fire in parallel) ────────────────────────────────────
 
-  for (const endpoint of endpoints) {
-    try {
-      return await fetchRows(endpoint, type, params);
-    } catch (error) {
-      lastError = error;
-
-      if (error.response?.status !== 404) {
-        throw error;
-      }
-    }
-  }
-
-  throw lastError;
-};
-
-const fetchOptionalRows = async (endpoint, type, params) => {
+/** Fetch the latest weekly summary — no auto-generation side-effects */
+const fetchLatestSummary = async () => {
   try {
-    return await fetchRows(endpoint, type, params);
-  } catch (error) {
-    if (error.response?.status === 404) {
-      return [];
-    }
-
-    throw error;
+    const res = await api.get("/weekly-summaries/latest");
+    return res.data?.data?.summary ?? res.data?.summary ?? null;
+  } catch {
+    return null;
   }
 };
 
-const sameId = (left, right) => String(left) === String(right);
-
-const getStressLevelItem = (level, t) => {
-  switch (String(level || "").toLowerCase()) {
-    case "high":
-    case "tinggi":
-      return { name: t.HighText, color: "#f8b4b4" };
-    case "moderate":
-    case "medium":
-    case "sedang":
-      return { name: t.MediumText, color: "#c7d2fe" };
-    case "low":
-    case "rendah":
-      return { name: t.LowText, color: "#4ade80" };
-    default:
-      return null;
+/** Fetch the latest AI-generated insight text */
+const fetchLatestInsight = async () => {
+  try {
+    const res = await api.get("/insights/latest");
+    const raw = res.data?.data?.insight ?? res.data?.insight ?? null;
+    if (!raw) return null;
+    const text = raw.insight_text ?? raw.insightText ?? raw.description ?? "";
+    return { id: raw.id, insight_text: String(text).trim(), created_at: raw.created_at };
+  } catch {
+    return null;
   }
 };
 
-const getScoreColor = (score, type = "stress") => {
-  if (type === "sleep") {
-    if (score >= 7) return "text-emerald-400";
-    if (score >= 5) return "text-orange-400";
-    return "text-red-400";
+/** Fetch latest batch of recommendations — no trigger call */
+const fetchLatestRecommendations = async () => {
+  try {
+    const res = await api.get("/recommendations", { params: { limit: 10, offset: 0 } });
+    const recs = res.data?.data?.recommendations ?? res.data?.recommendations ?? [];
+    if (recs.length === 0) return [];
+    const latestSummaryId = recs[0].summary_id;
+    if (latestSummaryId) return recs.filter((r) => r.summary_id === latestSummaryId);
+    const latestCreatedAt = recs[0].created_at;
+    return recs.filter((r) => r.created_at === latestCreatedAt);
+  } catch {
+    return [];
   }
-
-  if (type === "activity") {
-    if (score >= 45) return "text-emerald-400";
-    if (score >= 20) return "text-orange-400";
-    return "text-red-400";
-  }
-
-  if (score >= 70) return "text-red-400";
-  if (score >= 40) return "text-orange-400";
-  return "text-emerald-400";
 };
+
+/** Fetch paginated predictions for chart building */
+const fetchPredictions = async () => {
+  try {
+    const res = await api.get("/predictions", { params: { limit: 7, offset: 0 } });
+    return res.data?.data?.predictions ?? [];
+  } catch {
+    return [];
+  }
+};
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 function InsightPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
   const { t } = useLanguage();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [summaries, setSummaries] = useState([]);
+  const [dateRange, setDateRange] = useState("");
+  const [insightData, setInsightData] = useState(null);         // { weeklySummary, dataCount }
   const [narrativeInsight, setNarrativeInsight] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
+  const [todayRecommendations, setTodayRecommendations] = useState([]);
+  const [weeklyActivityData, setWeeklyActivityData] = useState([]);
+  const [academicConditionData, setAcademicConditionData] = useState([]);
+  const [stressIntensityData, setStressIntensityData] = useState([]);
+
+  const fetchSummaryData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 🚀 All requests fire in parallel — no blocking sequential calls
+      const [summary, insight, recommendations, predictions] = await Promise.all([
+        fetchLatestSummary(),
+        fetchLatestInsight(),
+        fetchLatestRecommendations(),
+        fetchPredictions(),
+      ]);
+
+      // ── Date range ────────────────────────────────────────────────────
+      if (summary) {
+        setDateRange(formatDateRange(summary.period_start, summary.period_end, t.DashboardDateLocale));
+      }
+
+      // ── Weekly summary stats ──────────────────────────────────────────
+      // Sort predictions oldest → newest for trend calculations
+      const sortedPreds = [...predictions].sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+
+      const weeklySummary = summary
+        ? {
+            avgStressScore: Math.round(Number(summary.avg_stress_score) || 0),
+            avgSleepHours: Number(summary.avg_sleep_hours) || 0,
+            avgAssignmentLoad: Number(summary.avg_assignment_load) || 0,
+            avgDeadlinePressure: Number(summary.avg_deadline_pressure) || 0,
+            avgPhysicalActivity: Number(summary.avg_physical_activity) || 0,
+            avgStudyHours: Number(summary.avg_study_hours) || 0,
+            avgSocialMediaHours: Number(summary.avg_social_media_hours) || 0,
+            // Trends from prediction history
+            stressTrend: getTrendPercentage(sortedPreds, (p) =>
+              Number(p.stress_score) <= 1 ? Number(p.stress_score) * 100 : Number(p.stress_score)
+            ),
+            sleepTrend: 0,
+            taskLoadTrend: 0,
+            physicalActivityTrend: 0,
+          }
+        : {
+            avgStressScore: 0, avgSleepHours: 0, avgAssignmentLoad: 0,
+            avgDeadlinePressure: 0, avgPhysicalActivity: 0, avgStudyHours: 0,
+            avgSocialMediaHours: 0, stressTrend: 0, sleepTrend: 0,
+            taskLoadTrend: 0, physicalActivityTrend: 0,
+          };
+
+      // ── Chart data ────────────────────────────────────────────────────
+      const chartData = sortedPreds.map((p) => {
+        const rawScore = Number(p.stress_score);
+        const score = rawScore <= 1 ? Math.round(rawScore * 100) : Math.round(rawScore);
+        const date = new Date(p.created_at || p.prediction_date);
+        return {
+          day: date.toLocaleDateString(t.DashboardDateLocale, { day: "numeric", month: "short" }),
+          value: score,
+          hasData: true,
+        };
+      });
+
+      // ── Stress intensity distribution ─────────────────────────────────
+      const intensityCounts = sortedPreds.reduce(
+        (acc, p) => {
+          const score = Number(p.stress_score) <= 1
+            ? Number(p.stress_score) * 100
+            : Number(p.stress_score);
+          if (score >= 70) acc.high += 1;
+          else if (score >= 40) acc.medium += 1;
+          else acc.low += 1;
+          return acc;
+        },
+        { high: 0, medium: 0, low: 0 }
+      );
+      const total = sortedPreds.length || 1;
+
+      // ── Academic condition bar data ───────────────────────────────────
+      const academicBars = [
+        {
+          label: t.InsightsStudyTimeLabel,
+          value: `${weeklySummary.avgStudyHours.toFixed(1)} ${t.HourText}`,
+          width: `${Math.min((weeklySummary.avgStudyHours / 8) * 100, 100)}%`,
+          color: "bg-blue-300",
+        },
+        {
+          label: t.InsightsTaskLoadLabel,
+          value: `${weeklySummary.avgAssignmentLoad.toFixed(0)}%`,
+          width: `${Math.min(weeklySummary.avgAssignmentLoad, 100)}%`,
+          color:
+            weeklySummary.avgAssignmentLoad >= 70
+              ? "bg-red-300"
+              : weeklySummary.avgAssignmentLoad >= 40
+              ? "bg-yellow-300"
+              : "bg-green-400",
+        },
+        {
+          label: t.InsightsDeadlinePressureLabel,
+          value: `${weeklySummary.avgDeadlinePressure.toFixed(0)}%`,
+          width: `${Math.min(weeklySummary.avgDeadlinePressure, 100)}%`,
+          color:
+            weeklySummary.avgDeadlinePressure >= 70
+              ? "bg-red-300"
+              : weeklySummary.avgDeadlinePressure >= 40
+              ? "bg-yellow-300"
+              : "bg-green-400",
+        },
+        {
+          label: t.InsightsPhysicalActivityLabel,
+          value: `${weeklySummary.avgPhysicalActivity.toFixed(0)} ${t.MinuteText}`,
+          width: `${Math.min((weeklySummary.avgPhysicalActivity / 60) * 100, 100)}%`,
+          color:
+            weeklySummary.avgPhysicalActivity >= 30
+              ? "bg-green-400"
+              : weeklySummary.avgPhysicalActivity >= 15
+              ? "bg-yellow-300"
+              : "bg-red-300",
+        },
+        {
+          label: t.InsightsAverageSleepLabel,
+          value: `${weeklySummary.avgSleepHours.toFixed(1)} ${t.HourText}`,
+          width: `${Math.min((weeklySummary.avgSleepHours / 8) * 100, 100)}%`,
+          color:
+            weeklySummary.avgSleepHours >= 7
+              ? "bg-green-400"
+              : weeklySummary.avgSleepHours >= 5
+              ? "bg-yellow-300"
+              : "bg-red-300",
+        },
+      ];
+
+      // ── Commit state ──────────────────────────────────────────────────
+      setInsightData({ weeklySummary, dataCount: sortedPreds.length });
+      setNarrativeInsight(insight);
+      setWeeklyActivityData(chartData);
+      setStressIntensityData([
+        { name: t.HighText, value: Math.round((intensityCounts.high / total) * 100) },
+        { name: t.MediumText, value: Math.round((intensityCounts.medium / total) * 100) },
+        { name: t.LowText, value: Math.round((intensityCounts.low / total) * 100) },
+      ]);
+      setAcademicConditionData(academicBars);
+      setTodayRecommendations(recommendations);
+    } catch (err) {
+      console.error("Failed to fetch summary data:", err);
+      setError(err.response?.data?.message || err.message || t.InsightsFetchError);
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
-    const fetchInsightsPageData = async () => {
-      if (userLoading) {
-        return;
-      }
+    fetchSummaryData();
+  }, [fetchSummaryData]);
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        if (!user.id) {
-          throw new Error("User ID tidak ditemukan. Silakan login ulang.");
-        }
-
-        const summaryRows = await fetchFirstAvailableRows(["/weekly-summaries", "/summaries"], "summaries", {
-          user_id: user.id,
-          limit: 1000,
-          offset: 0,
-        });
-        const userSummaries = sortNewest(summaryRows.map(normalizeSummary))
-          .filter((summary) => sameId(summary.userId, user.id));
-        const latestSummary = userSummaries[0] ?? null;
-
-        if (!latestSummary?.id) {
-          setSummaries([]);
-          setNarrativeInsight(null);
-          setRecommendations([]);
-          return;
-        }
-
-        const scopedParams = {
-          user_id: user.id,
-          summary_id: latestSummary.id,
-          weekly_summary_id: latestSummary.id,
-        };
-        const [insightRows, recommendationRows] = await Promise.all([
-          fetchOptionalRows("/insights", "insights", scopedParams),
-          fetchOptionalRows("/recommendations", "recommendations", scopedParams),
-        ]);
-
-        setSummaries(userSummaries);
-        setNarrativeInsight(
-          sortNewest(insightRows.map(normalizeInsight))
-            .filter((insight) => sameId(insight.summaryId, latestSummary.id) && insight.text.trim())[0] ?? null,
-        );
-        setRecommendations(
-          sortNewest(recommendationRows.map(normalizeRecommendation))
-            .filter((recommendation) => sameId(recommendation.summaryId, latestSummary.id)),
-        );
-      } catch (err) {
-        console.error("Failed to fetch insights data:", err);
-        setError(err.response?.data?.message || err.message || t.InsightsFetchError);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInsightsPageData();
-  }, [user.id, userLoading, t.InsightsFetchError]);
-
-  const latestSummary = summaries[0] ?? null;
-  const metricCards = useMemo(() => {
-    if (!latestSummary) {
-      return [];
+  // ── Score color helpers ───────────────────────────────────────────────────
+  const getScoreColor = (score, type = "stress") => {
+    if (type === "stress") {
+      if (score >= 70) return "text-red-400";
+      if (score >= 40) return "text-orange-400";
+      return "text-emerald-400";
     }
+    if (type === "sleep") {
+      if (score >= 7) return "text-emerald-400";
+      if (score >= 5) return "text-orange-400";
+      return "text-red-400";
+    }
+    if (type === "activity") {
+      if (score >= 45) return "text-emerald-400";
+      if (score >= 20) return "text-orange-400";
+      return "text-red-400";
+    }
+    if (type === "load") {
+      if (score >= 70) return "text-red-400";
+      if (score >= 40) return "text-orange-400";
+      return "text-emerald-400";
+    }
+    return "text-gray-400";
+  };
 
+  const getTrendIndicator = useCallback(
+    (trendValue) => {
+      if (trendValue > 0) return t.InsightsTrendUp;
+      if (trendValue < 0) return t.InsightsTrendDown;
+      return t.InsightsTrendStable;
+    },
+    [t]
+  );
+
+  // ── Metrics cards data ───────────────────────────────────────────────────
+  const metricsData = useMemo(() => {
+    if (!insightData) return [];
+    const { weeklySummary } = insightData;
     return [
       {
         title: t.StressScoreTitle,
-        value: Math.round(latestSummary.avgStressScore),
+        value: weeklySummary.avgStressScore,
         maxScore: 100,
-        color: getScoreColor(latestSummary.avgStressScore),
-        subtitle: t.InsightsLatestData,
+        color: getScoreColor(weeklySummary.avgStressScore, "stress"),
+        subtitle: t.AverageText,
+        trend: weeklySummary.stressTrend,
       },
       {
         title: t.LastNightSleepTitle,
-        value: Number(latestSummary.avgSleepHours.toFixed(1)),
+        value: Number(weeklySummary.avgSleepHours.toFixed(1)),
         maxScore: 10,
-        color: getScoreColor(latestSummary.avgSleepHours, "sleep"),
-        subtitle: `${latestSummary.avgSleepHours.toFixed(1)} ${t.HourText}`,
+        color: getScoreColor(weeklySummary.avgSleepHours, "sleep"),
+        subtitle: `${weeklySummary.avgSleepHours.toFixed(1)} ${t.HourText} ${getTrendIndicator(weeklySummary.sleepTrend)}`,
+        trend: weeklySummary.sleepTrend,
       },
       {
         title: t.TaskLoadTitle,
-        value: Math.round(latestSummary.avgAssignmentLoad),
+        value: Math.round(weeklySummary.avgAssignmentLoad),
         maxScore: 100,
-        color: getScoreColor(latestSummary.avgAssignmentLoad),
-        subtitle: `${latestSummary.avgAssignmentLoad.toFixed(0)}%`,
+        color: getScoreColor(weeklySummary.avgAssignmentLoad, "load"),
+        subtitle: `${weeklySummary.avgAssignmentLoad.toFixed(0)}% ${getTrendIndicator(weeklySummary.taskLoadTrend)}`,
+        trend: weeklySummary.taskLoadTrend,
       },
       {
         title: t.PhysicalActivityTitle,
-        value: Math.round(latestSummary.avgPhysicalActivity),
+        value: Math.round(weeklySummary.avgPhysicalActivity),
         maxScore: 60,
-        color: getScoreColor(latestSummary.avgPhysicalActivity, "activity"),
-        subtitle: `${latestSummary.avgPhysicalActivity.toFixed(0)} ${t.MinuteText}`,
+        color: getScoreColor(weeklySummary.avgPhysicalActivity, "activity"),
+        subtitle: `${weeklySummary.avgPhysicalActivity.toFixed(0)} ${t.MinuteText} ${getTrendIndicator(weeklySummary.physicalActivityTrend)}`,
+        trend: weeklySummary.physicalActivityTrend,
       },
     ];
-  }, [latestSummary, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insightData, t, getTrendIndicator]);
 
-  const weeklyActivityData = useMemo(
-    () =>
-      summaries.slice(0, 7).reverse().map((summary) => ({
-        day: (toDate(summary.periodEnd) ?? toDate(summary.createdAt))?.toLocaleDateString(t.DashboardDateLocale, {
-          day: "numeric",
-          month: "short",
-        }) ?? "-",
-        value: Math.round(summary.avgStressScore),
-        hasData: true,
-      })),
-    [summaries, t.DashboardDateLocale],
-  );
-
-  const stressIntensityChart = useMemo(() => {
-    if (!latestSummary) {
-      return { data: [], valueSuffix: ` ${t.DayText ?? "hari"}` };
-    }
-
-    const stressDays = [
-      { name: t.HighText, value: latestSummary.highStressDays, color: "#f8b4b4" },
-      { name: t.MediumText, value: latestSummary.mediumStressDays, color: "#c7d2fe" },
-      { name: t.LowText, value: latestSummary.lowStressDays, color: "#4ade80" },
-    ];
-    const hasStressDayData = stressDays.some((item) => item.value > 0);
-
-    if (hasStressDayData) {
-      return { data: stressDays, valueSuffix: ` ${t.DayText ?? "hari"}` };
-    }
-
-    const dominantStress = getStressLevelItem(latestSummary.dominantStressLevel, t);
-    if (dominantStress) {
-      return {
-        data: [{ ...dominantStress, value: latestSummary.daysCount || 1 }],
-        valueSuffix: ` ${t.DayText ?? "hari"}`,
-      };
-    }
-
-    if (latestSummary.avgStressScore > 0) {
-      return {
-        data: [{
-          name: t.StressScoreTitle,
-          value: Math.round(latestSummary.avgStressScore),
-          color: "#c7d2fe",
-        }],
-        valueSuffix: "/100",
-      };
-    }
-
-    return { data: [], valueSuffix: ` ${t.DayText ?? "hari"}` };
-  }, [latestSummary, t]);
-
+  // ── Loading / Error ──────────────────────────────────────────────────────
   if (loading) {
     return (
       <Layout title={t.InsightsPageTitle} name={user.fullname} role={user.role}>
-        <div className="text-center py-10 theme-muted">{t.InsightsLoading}</div>
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-10 h-10 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+          <p className="theme-muted text-sm">Memuat summary...</p>
+        </div>
       </Layout>
     );
   }
@@ -342,62 +355,82 @@ function InsightPage() {
     );
   }
 
-  const narrativeSubtitle = narrativeInsight?.createdAt
-    ? `${t.InsightsLatestFromDatabase} - ${new Date(narrativeInsight.createdAt).toLocaleDateString(t.DashboardDateLocale, {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })}`
-    : t.InsightsNoData;
+  const latestInsightDescription = narrativeInsight?.insight_text || "Data summary belum tersedia.";
+  const narrativeSubtitle = narrativeInsight?.created_at
+    ? `${t.InsightsLatestFromDatabase} – ${new Date(narrativeInsight.created_at).toLocaleDateString(
+        t.DashboardDateLocale,
+        { day: "numeric", month: "long", year: "numeric" }
+      )}`
+    : "Belum ada insight AI yang tersimpan.";
 
   return (
     <Layout title={t.InsightsPageTitle} name={user.fullname} role={user.role}>
       <div className="space-y-6">
-        <div>
-          <p className="theme-subtle text-xs uppercase mb-2">{t.InsightsEyebrow}</p>
-          <h1 className="theme-text text-3xl md:text-4xl font-bold">
-            {t.InsightsHeroTitle}
-          </h1>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {metricCards.length > 0 ? (
-            metricCards.map((metric) => (
-              <StatsCard key={metric.title} {...metric} />
-            ))
-          ) : (
-            <div className="col-span-full theme-muted">{t.InsightsNoData}</div>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <p className="theme-subtle text-xs uppercase mb-2">{t.InsightsEyebrow}</p>
+            <h1 className="theme-text text-3xl md:text-4xl font-bold">{t.InsightsHeroTitle}</h1>
+          </div>
+          {dateRange && (
+            <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-300 text-sm font-semibold self-start md:self-auto">
+              {dateRange}
+            </div>
           )}
         </div>
 
+        {/* Section 1: Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {metricsData.map((metric, index) => (
+            <StatsCard
+              key={index}
+              title={metric.title}
+              value={metric.value}
+              maxScore={metric.maxScore}
+              color={metric.color}
+              subtitle={metric.subtitle}
+              trend={metric.trend}
+            />
+          ))}
+        </div>
+
+        {/* Section 2: AI Narrative Insight */}
         <AINarrativeCard
           title={t.AINarrativeInsightTitle}
           subtitle={narrativeSubtitle}
-          description={narrativeInsight?.text || t.InsightsNoData}
+          description={latestInsightDescription}
         />
 
+        {/* Section 3: Academic Condition Metrics */}
+        <AcademicCondition items={academicConditionData} title={t.InsightsAcademicAverageTitle} />
+
+        {/* Section 4: Weekly Analytics */}
         <div className="grid lg:grid-cols-2 gap-6">
           <WeeklyActivityChart data={weeklyActivityData} title={t.InsightsWeeklyActivityTitle} />
           <StressIntensityChart
-            avgScore={Math.round(latestSummary?.avgStressScore ?? 0)}
-            data={stressIntensityChart.data}
+            avgScore={insightData?.weeklySummary.avgStressScore || 0}
+            data={stressIntensityData}
             title={t.InsightsStressIntensityTitle}
-            valueSuffix={stressIntensityChart.valueSuffix}
           />
         </div>
 
+        {/* Section 5: Rekomendasi */}
         <div>
-          <h2 className="theme-text text-2xl font-bold mb-4">
-            {t.PriorityTodayTitle}
-          </h2>
+          <h2 className="theme-text text-2xl font-bold mb-4">{t.PriorityTodayTitle}</h2>
           <div className="grid lg:grid-cols-2 gap-4">
-            {recommendations.length > 0 ? (
-              recommendations.map((recommendation) => (
+            {todayRecommendations.length > 0 ? (
+              todayRecommendations.map((task, index) => (
                 <PriorityCard
-                  key={recommendation.id}
-                  title={recommendation.title}
-                  description={recommendation.text}
-                  level={recommendation.level}
+                  key={index}
+                  title={task.title}
+                  description={task.recommendation_text}
+                  level={task.priority_level}
+                  duration=""
+                  stressImpact={
+                    task.category
+                      ? task.category.charAt(0).toUpperCase() + task.category.slice(1)
+                      : ""
+                  }
                 />
               ))
             ) : (

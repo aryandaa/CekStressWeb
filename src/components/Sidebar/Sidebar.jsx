@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import SidebarItem from "./SidebarItem";
 import logo from "../../assets/img/logo.png";
 import IconsSidebar from "./IconsSidebar";
@@ -45,9 +45,9 @@ function Sidebar({ isOpen, setIsOpen }) {
       <aside
         className={`
           fixed left-0 top-0 z-40
-          flex h-screen w-52 flex-col
+          flex h-screen w-60 flex-col
           theme-sidebar
-          px-6 py-8
+          px-4 py-8
           transition-transform duration-300
 
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -129,7 +129,7 @@ function Sidebar({ isOpen, setIsOpen }) {
             </SidebarItem>
 
             <SidebarItem
-              to="/Insight"
+              to="/summary"
               icon={
                 <IconsSidebar
                   paths={
@@ -176,11 +176,19 @@ function Sidebar({ isOpen, setIsOpen }) {
           </div>
 
           <div className="mt-auto">
-            <SidebarItem to="/LogActivity">
-              <div className="bg-[#ADC7FF] text-[#002E68] text-center w-38 h-10 rounded justify-center">
-                <span className="text-2xl ">+ </span> {t.StressCheck}
-                </div>
-            </SidebarItem>
+            <NavLink
+              to="/LogActivity"
+              className={({ isActive }) => `
+                flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 shadow-sm mb-4
+                ${isActive 
+                  ? "bg-blue-600 text-white shadow-blue-500/20" 
+                  : "bg-blue-500/15 text-blue-600 dark:text-blue-400 dark:bg-blue-500/10 hover:bg-blue-500/20 theme-border-soft border"
+                }
+              `}
+            >
+              <span className="text-lg font-bold">+</span>
+              <span>{t.StressCheck}</span>
+            </NavLink>
 
              <button
               type="button"
@@ -205,7 +213,7 @@ function Sidebar({ isOpen, setIsOpen }) {
                   }
                 />
               </span>
-              <span className="truncate text-[15px] leading-normal">
+              <span className="text-[15px] leading-normal whitespace-nowrap">
                 {t.LogoutSdbr}
               </span>
             </button>

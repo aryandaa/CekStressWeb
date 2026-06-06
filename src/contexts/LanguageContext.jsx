@@ -26,7 +26,7 @@ const translations = {
     CloseButton: "Tutup",
     DashboardDateLocale: "id-ID",
     MinuteText: "Mnt",
-    PriorityTodayTitle: "Prioritas Hari Ini",
+    PriorityTodayTitle: "Rekomendasi",
     LongTermTitle: "Saran Jangka Panjang",
 
     // LeftPanel
@@ -72,8 +72,8 @@ const translations = {
     LabelConfirmNewPassword: "Konfirmasi Kata Sandi Baru" ,
 
     // Sidebar
-    ActSdbr: "Catatan Aktivitas",
-    CekStresSdbr: "Insights & Rekomendasi",
+    ActSdbr: "Riwayat Aktivitas",
+    CekStresSdbr: "Summary",
     ReqomendationSdbr: "Rekomendasi",
     ProfileSdbr: "Profile Saya",
     StressCheck: "Cek Stres",
@@ -206,9 +206,9 @@ const translations = {
     // Insights Page
     AINarrativeInsightTitle: "Insight Naratif AI",
     AINarrativeInsightSubtitle: "Berikut insight untuk minggu ini",
-    InsightsPageTitle: "Insights",
-    InsightsEyebrow: "Insights & Analitik Akademik",
-    InsightsHeroTitle: "Insights Akademik & Lifestyle",
+    InsightsPageTitle: "Ringkasan",
+    InsightsEyebrow: "Summary & Analitik Mingguan",
+    InsightsHeroTitle: "Summary Akademik & Lifestyle",
     InsightsLoading: "Memuat data insights...",
     InsightsFetchError: "Gagal memuat data insights.",
     InsightsLatestData: "Data terakhir",
@@ -227,7 +227,7 @@ const translations = {
     InsightsLatestFromDatabase: "Insight terbaru dari database",
     InsightsFallbackWithData: "Dalam {count} catatan selesai terakhir pada rentang 7 hari ini, rata-rata stres berada di {stressScore}/100. Rata-rata tidur {sleepHours} jam, beban tugas {taskLoad}%, dan aktivitas fisik {physicalActivity} menit. Insight akan diperbarui dari database setelah AI menyimpan data terbaru.",
     InsightsFallbackNoData: "Belum ada catatan aktivitas selesai untuk dianalisis. Isi jurnal harian terlebih dahulu agar insight dan rekomendasi bisa diperbarui dari database.",
-    InsightsNoPriorityToday: "Tidak ada prioritas hari ini.",
+    InsightsNoPriorityToday: "Tidak ada rekomendasi.",
     InsightsNoLongTermSuggestions: "Tidak ada saran jangka panjang.",
     // prediksi stress
     PredictionPageTitle: "Prediksi Stres",
@@ -307,7 +307,7 @@ const translations = {
     CloseButton: "Close",
     DashboardDateLocale: "en-US",
     MinuteText: "Min",
-    PriorityTodayTitle: "Today's Priorities",
+    PriorityTodayTitle: "Recommendations",
     LongTermTitle: "Long-term Suggestions",
 
     // LeftPanel
@@ -353,8 +353,8 @@ const translations = {
     LabelConfirmNewPassword: "Confirm New Password",
 
     // Sidebar
-    ActSdbr: "Activity Log",
-    CekStresSdbr: "Insights & Recommendations",
+    ActSdbr: "Activity History",
+    CekStresSdbr: "Summary",
     ReqomendationSdbr: "Recommendation",
     ProfileSdbr: "My Profile",
     StressCheck: "Stress Check",
@@ -487,9 +487,9 @@ const translations = {
     // Insights Page
     AINarrativeInsightTitle: "AI Narrative Insight",
     AINarrativeInsightSubtitle: "Here are insights for this week",
-    InsightsPageTitle: "Insights",
-    InsightsEyebrow: "Insights & Academic Analytics",
-    InsightsHeroTitle: "Academic & Lifestyle Insights",
+    InsightsPageTitle: "Summary",
+    InsightsEyebrow: "Weekly Summary & Analytics",
+    InsightsHeroTitle: "Academic & Lifestyle Summary",
     InsightsLoading: "Loading insights data...",
     InsightsFetchError: "Failed to load insights data.",
     InsightsLatestData: "Latest data",
@@ -508,7 +508,7 @@ const translations = {
     InsightsLatestFromDatabase: "Latest insight from database",
     InsightsFallbackWithData: "Across the last {count} completed records in this 7-day range, average stress is {stressScore}/100. Average sleep is {sleepHours} hours, task load is {taskLoad}%, and physical activity is {physicalActivity} minutes. Insights will update from the database after AI saves the latest data.",
     InsightsFallbackNoData: "No completed activity records are available for analysis yet. Fill in your daily journal first so insights and recommendations can be updated from the database.",
-    InsightsNoPriorityToday: "No priorities for today.",
+    InsightsNoPriorityToday: "No recommendations.",
     InsightsNoLongTermSuggestions: "No long-term suggestions yet.",
     // prediksi stress
     PredictionPageTitle: "Stress Prediction",

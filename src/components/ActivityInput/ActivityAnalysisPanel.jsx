@@ -1,9 +1,27 @@
 import PropTypes from "prop-types";
 
-function getStressCategory(score, t) {
-  if (score <= 39) {
+function getStressLabel(stressLevel, t) {
+  const normalizedLevel = String(stressLevel || "").toLowerCase();
+
+  if (normalizedLevel === "low") {
+    return t.LowText;
+  }
+
+  if (normalizedLevel === "medium" || normalizedLevel === "moderate") {
+    return t.MediumText;
+  }
+
+  if (normalizedLevel === "high") {
+    return t.HighText;
+  }
+
+  return stressLevel || "-";
+}
+
+function getStressCategory(score, stressLevel, t) {
+  if (score <= 20) {
     return { 
-      label: t.LowText,
+      label: getStressLabel(stressLevel, t),
       color: "text-emerald-400",
       bgcolor: "to-emerald-950/60",
       tag: "text-emerald-300",
@@ -11,18 +29,18 @@ function getStressCategory(score, t) {
     };
   }
 
-  if (score <= 69) {
+  if (score <= 45) {
     return { 
-      label: t.MediumText,
-      color: "text-yellow-400",
-      bgcolor: "to-yellow-950/60",
-      tag: "text-yellow-300",
-      bgcolorTag: "bg-yellow-500/25" 
+      label: getStressLabel(stressLevel, t),
+      color: "text-blue-400",
+      bgcolor: "to-blue-950/60",
+      tag: "text-blue-300",
+      bgcolorTag: "bg-blue-500/25" 
     };
   }
 
   return { 
-    label: t.HighText,
+    label: getStressLabel(stressLevel, t),
     color: "text-red-400" ,
     bgcolor: "to-red-950/60",
     tag: "text-red-300",
@@ -40,18 +58,13 @@ function normalizeStressScore(score) {
   return Math.round(value <= 1 ? value * 100 : value);
 }
 
-function getPredictionValue(prediction, snakeKey, camelKey) {
-  return prediction?.[snakeKey] ?? prediction?.[camelKey];
-}
-
 function ActivityAnalysisPanel({ isLoading = false, prediction = null, t, visible = true, onClose }) {
   if (!visible) {
     return null;
   }
 
-  const stressScore = normalizeStressScore(getPredictionValue(prediction, "stress_score", "stressScore"));
-  const confidenceScore = normalizeStressScore(getPredictionValue(prediction, "confidence_score", "confidenceScore"));
-  const stressCategory = getStressCategory(stressScore ?? 0, t);
+  const stressScore = normalizeStressScore(prediction?.stress_score);
+  const stressCategory = getStressCategory(stressScore ?? 0, prediction?.stress_level, t);
   const hasPrediction = stressScore !== null;
   const predictionSummary =
     prediction?.summary ||
@@ -68,7 +81,7 @@ function ActivityAnalysisPanel({ isLoading = false, prediction = null, t, visibl
         <button
           type="button"
           onClick={onClose}
-          className="theme-card-muted theme-text absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] shadow-sm transition hover:border-blue-400 hover:text-blue-400"
+          className="theme-card-muted theme-text absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--border) shadow-sm transition hover:border-blue-400 hover:text-blue-400"
           aria-label={t.CloseButton || "Tutup"}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
@@ -118,11 +131,6 @@ function ActivityAnalysisPanel({ isLoading = false, prediction = null, t, visibl
                     {predictionSummary}
                   </p>
                 )}
-                {confidenceScore !== null && (
-                  <p className="theme-subtle mt-4 text-xs font-semibold uppercase tracking-wide">
-                    Confidence {confidenceScore}%
-                  </p>
-                )}
               </>
             )}
           </div>
@@ -136,11 +144,7 @@ ActivityAnalysisPanel.propTypes = {
   isLoading: PropTypes.bool,
   prediction: PropTypes.shape({
     stress_level: PropTypes.string,
-    stressLevel: PropTypes.string,
     stress_score: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    stressScore: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    confidence_score: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    confidenceScore: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     summary: PropTypes.string,
     insight_text: PropTypes.string,
     recommendation_text: PropTypes.string,

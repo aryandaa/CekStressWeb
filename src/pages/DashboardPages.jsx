@@ -18,13 +18,8 @@ const parseDateOnly = (dateValue) => {
   }
 
   const stringValue = String(dateValue);
-
-  if (stringValue.includes("T")) {
-    const date = new Date(stringValue);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  const [year, month, day] = stringValue.slice(0, 10).split("-").map(Number);
+  const dateStr = stringValue.includes("T") ? stringValue.split("T")[0] : stringValue;
+  const [year, month, day] = dateStr.slice(0, 10).split("-").map(Number);
 
   if (!year || !month || !day) {
     return null;

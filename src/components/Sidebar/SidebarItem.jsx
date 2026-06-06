@@ -16,7 +16,7 @@ function SidebarItem({ to, icon, children, end = false }) {
         {icon}
       </span>
       
-      <span className="truncate text-[15px] leading-normal">
+      <span className="text-[15px] leading-normal whitespace-nowrap">
         {children}
       </span>
 

@@ -6,10 +6,10 @@ const getLocalDateString = (date = new Date()) => {
   return `${year}-${month}-${day}`;
 };
 
-const getPastActivityDateOptions = (date = new Date(), dayCount = 4) =>
+const getPastActivityDateOptions = (date = new Date(), dayCount = 3) =>
   Array.from({ length: dayCount }, (_, index) => {
     const optionDate = new Date(date);
-    optionDate.setDate(optionDate.getDate() - (index + 1));
+    optionDate.setDate(optionDate.getDate() - index);
 
     return {
       value: getLocalDateString(optionDate),
@@ -18,7 +18,7 @@ const getPastActivityDateOptions = (date = new Date(), dayCount = 4) =>
   });
 
 const createInitialActivityForm = () => ({
-  activityDate: "",
+  activityDate: getLocalDateString(),
   sleepHours: "",
   studyHours: "",
   screenTimeHours: "",

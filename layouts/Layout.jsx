@@ -46,7 +46,7 @@ function Layout({ title, name, role = "User", children }) {
       <div className="flex min-h-screen">
         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
-        <main className="min-w-0 flex-1 overflow-hidden md:ml-52 px-4 md:px-6 pt-20 pb-6">
+        <main className="min-w-0 flex-1 overflow-hidden md:ml-60 px-4 md:px-6 pt-20 pb-6">
           <Navbar
             title={title}
             name={profile.fullname}
