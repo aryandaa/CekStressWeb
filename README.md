@@ -1,321 +1,444 @@
-# 🧠 CekTenang — Student Stress Detector
+# CekTenang - Student Stress Detector Web
 
 <p align="center">
-  <strong>Platform deteksi & manajemen stres mahasiswa berbasis Machine Learning</strong>
+  <strong>Frontend web untuk platform deteksi dan monitoring stres mahasiswa</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"/>
-  <img src="https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
-  <img src="https://img.shields.io/badge/Python-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/TensorFlow-ML-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="TensorFlow"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/TailwindCSS-Styling-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS"/>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/TailwindCSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS"/>
+  <img src="https://img.shields.io/badge/React_Router-7-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white" alt="React Router"/>
+  <img src="https://img.shields.io/badge/Axios-API_Client-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios"/>
 </p>
 
 ---
 
-## 📋 Tentang Proyek
+## Tentang Proyek
 
-**CekTenang** adalah aplikasi web full-stack yang membantu mahasiswa memantau, mendeteksi, dan mengelola tingkat stres mereka secara personal. Dengan memanfaatkan model Machine Learning (TensorFlow + LightGBM), aplikasi ini menganalisis aktivitas harian mahasiswa — mulai dari pola tidur, jam belajar, screen time, hingga kondisi mood — untuk menghasilkan:
+**CekTenang Web** adalah aplikasi frontend React untuk membantu mahasiswa mencatat aktivitas harian, melihat skor stres, membaca insight, dan memantau rekomendasi personal dari sistem backend.
 
-- 🎯 **Prediksi level stres** secara real-time (Low / Moderate / High)
-- 📊 **Dashboard interaktif** dengan visualisasi tren stres 7 hari
-- 💡 **AI-generated insights** yang menjelaskan penyebab stres
-- 📝 **Rekomendasi personal** untuk mengurangi stres
-- 📧 **Export laporan** harian & mingguan via email
-- 🌐 **Multi-language support** (Indonesia & English)
-- 🌙 **Dark/Light mode** untuk kenyamanan pengguna
+Repository ini sekarang hanya berisi **frontend web**. Backend API, database, dan service Machine Learning sudah dipisah ke repository/deployment masing-masing.
+
+Frontend ini mengonsumsi backend lokal berikut secara default:
+
+```text
+http://localhost:3000
+```
+
+Fitur utama frontend:
+
+- Autentikasi pengguna: register, login, logout, forgot password, dan reset password
+- Landing page publik
+- Dashboard ringkasan skor stres dan aktivitas terbaru
+- Input aktivitas harian dan draft aktivitas
+- Riwayat aktivitas dan prediksi
+- Halaman insights dengan narasi AI, grafik mingguan, kondisi akademik, dan prioritas dari database
+- Profile akun, update nama, password, dan foto profil
+- Dukungan Bahasa Indonesia dan English
+- Dark mode dan light mode
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## Arsitektur Sistem
 
+```text
++---------------------------+        HTTPS/API        +-----------------------------------------------+
+|  stress-detector-web      | ----------------------> |  Deployed Backend API                         |
+|                           |                         |  Railway                                      |
+|  React + Vite             |                         |  http://localhost:3000                       |
+|  TailwindCSS              |                         |  atau backend production Railway             |
+|  React Router             |                         |                                               |
+|  Axios / Fetch client     |                         |  Auth, Activities, Predictions, Insights,     |
+|                           |                         |  Recommendations, Profiles, Dashboard         |
++---------------------------+                         +-----------------------------------------------+
+          |
+          v
+  Static build output
+  dist/
 ```
-┌──────────────────────┐     ┌───────────────────────┐     ┌────────────────────────┐
-│   stress-detector-web│     │  stress-detector-api   │     │  stress-detector-ml    │
-│                      │     │                        │     │                        │
-│   React + Vite       │────▶│  Express.js + Node.js  │────▶│  FastAPI + Python      │
-│   TailwindCSS 4      │     │  PostgreSQL + Redis    │     │  TensorFlow + LightGBM │
-│   React Router       │     │  RabbitMQ + JWT        │     │  Scikit-learn + Pandas  │
-│                      │     │                        │     │                        │
-│   Port: 5173         │     │  Port: 3000            │     │  Port: 8000            │
-└──────────────────────┘     └───────────────────────┘     └────────────────────────┘
-                                      │
-                              ┌───────┴────────┐
-                              │  Docker Compose │
-                              │  • PostgreSQL   │
-                              │  • Redis        │
-                              │  • RabbitMQ     │
-                              └────────────────┘
+
+Catatan:
+
+- Repo ini tidak menjalankan PostgreSQL, Redis, RabbitMQ, Express API, atau service ML.
+- Frontend hanya bertugas menampilkan UI dan memanggil endpoint backend.
+- Base URL API dikelola dari `api.config.js` dan bisa dioverride memakai `VITE_API_BASE_URL`.
+
+---
+
+## Struktur Repository
+
+```text
+CekStressWeb/
+|-- public/                         # Static public assets
+|   |-- favicon.svg
+|   `-- icons.svg
+|
+|-- layouts/                        # Layout halaman auth dan dashboard
+|   |-- AuthLayout.jsx
+|   |-- Layout.jsx
+|   |-- LeftPanel.jsx
+|   `-- RightPanel.jsx
+|
+|-- src/
+|   |-- App.jsx                     # Route utama aplikasi
+|   |-- index.jsx                   # Entry point React
+|   |
+|   |-- assets/                     # Logo, icon, dan image lokal
+|   |-- components/                 # Komponen reusable
+|   |   |-- ActivityHistory/
+|   |   |-- ActivityInput/
+|   |   |-- DiagnosticBox/
+|   |   |-- Insights/
+|   |   |-- Navbar/
+|   |   |-- Sidebar/
+|   |   `-- profile/
+|   |
+|   |-- contexts/                   # Theme, language, user, protected route
+|   |-- pages/                      # Landing, auth, dashboard, activity, insight, profile
+|   |-- services/                   # API client dan service per domain
+|   `-- styles/                     # Style global TailwindCSS
+|
+|-- api.config.js                   # Konfigurasi base URL API
+|-- vite.config.js                  # Konfigurasi Vite
+|-- eslint.config.js                # Konfigurasi ESLint
+|-- package.json                    # Script dan dependency frontend
+|-- .env.example                    # Contoh environment variable
+`-- README.md                       # Dokumentasi project ini
 ```
 
 ---
 
-## 📁 Struktur Monorepo
-
-```
-student-stress-detector/
-├── stress-detector-api/       # 🔧 Backend REST API (Node.js + Express)
-│   ├── src/
-│   │   ├── services/          # Business logic (11 service domains)
-│   │   ├── routes/            # Route definitions
-│   │   ├── middlewares/       # Auth, error handling, validation
-│   │   ├── ai/               # ML service client
-│   │   ├── cache/            # Redis caching
-│   │   └── security/         # JWT token management
-│   ├── migrations/            # PostgreSQL migrations (9 files)
-│   ├── swagger.yaml           # OpenAPI 3.0 documentation
-│   └── docker-compose.yml     # Infrastructure containers
-│
-├── stress-detector-web/       # 🌐 Frontend Web App (React + Vite)
-│   ├── src/
-│   │   ├── pages/             # Login, Register, Dashboard, Activities, Reset Password
-│   │   ├── components/        # Reusable UI components (Navbar, Sidebar, Inputs)
-│   │   ├── contexts/          # Language & Theme providers
-│   │   ├── services/          # API communication layer
-│   │   └── styles/            # TailwindCSS styles
-│   └── layouts/               # Page layout templates
-│
-├── stress-detector-ml/        # 🤖 Machine Learning Service (Python + FastAPI)
-│   ├── main.py                # Unified ML API (predict, insights, recommendations)
-│   ├── models/                # Trained models (TensorFlow .keras, scaler, encoder)
-│   ├── artifacts/             # Knowledge base (recommendation & insight engines)
-│   └── requirements.txt       # Python dependencies
-│
-├── shared/                    # 📐 Dokumentasi bersama
-│   ├── Alur Website.png       # Diagram alur website
-│   └── ERD.png                # Entity Relationship Diagram
-│
-└── README.md                  # 📄 Dokumentasi ini
-```
-
----
-
-## 🚀 Cara Menjalankan
+## Cara Menjalankan
 
 ### Prasyarat
 
 | Tool | Versi Minimum |
 |---|---|
-| Node.js | ≥ 18 |
-| Python | ≥ 3.10 |
-| Docker & Docker Compose | Latest |
-| npm | ≥ 9 |
+| Node.js | >= 18 |
+| npm | >= 9 |
 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/Zetday/student-stress-detector.git
-cd student-stress-detector
+git clone https://github.com/Zetday/student-stress-detector-web.git
+cd student-stress-detector-web
 ```
 
-### 2. Jalankan Infrastruktur
+Jika nama folder lokal berbeda, masuk ke folder frontend ini:
 
 ```bash
-cd stress-detector-api
-docker-compose up -d
+cd CekStressWeb
 ```
 
-Ini akan menjalankan **PostgreSQL**, **Redis**, dan **RabbitMQ**.
-
-### 3. Setup & Jalankan Backend API
+### 2. Install Dependency
 
 ```bash
-cd stress-detector-api
-cp .env.example .env        # Sesuaikan konfigurasi
 npm install
-npm run migrate up          # Jalankan database migration
-npm run start:dev           # Server berjalan di http://localhost:3000
 ```
 
-### 4. Setup & Jalankan ML Service
+### 3. Setup Environment
 
 ```bash
-cd stress-detector-ml
-python -m venv venv
-source venv/bin/activate    # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+cp .env.example .env
 ```
 
-### 5. Setup & Jalankan Frontend Web
+Isi `.env` untuk menentukan backend yang dipakai:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+Jika `.env` tidak dibuat, aplikasi tetap memakai default production backend dari `api.config.js`.
+
+### 4. Jalankan Development Server
 
 ```bash
-cd stress-detector-web
-cp .env.example .env        # Pastikan VITE_API_BASE_URL=http://localhost:3000
-npm install
-npm run dev                 # App berjalan di http://localhost:5173
+npm run dev
+```
+
+Aplikasi berjalan di:
+
+```text
+http://localhost:5173
+```
+
+### 5. Build Production
+
+```bash
+npm run build
+```
+
+Output build akan dibuat di folder:
+
+```text
+dist/
+```
+
+### 6. Preview Build
+
+```bash
+npm run preview
 ```
 
 ---
 
-## 🌐 Fitur Web Application
+## Fitur Web Application
 
-### 🔐 Autentikasi
-- **Register** — Daftar akun dengan fullname, email, dan password
-- **Login** — Masuk dengan email & password, mendapat JWT token
-- **Forgot Password** — Kirim link reset password via email
-- **Reset Password** — Atur password baru menggunakan recovery token
+### Autentikasi
 
-### 📊 Dashboard
-- **Stress Score** — Skor stres terkini dengan indikator warna (hijau/kuning/merah)
-- **Metrik Utama** — Jam tidur, durasi olahraga, screen time
-- **Tren 7 Hari** — Grafik bar chart tren stres mingguan
-- **Kondisi Hari Ini** — Progress bar untuk setiap kategori aktivitas
-- **Insight Terbaru** — AI-generated insight dengan border indikator warna
+- Register akun dengan nama lengkap, email, dan password
+- Login menggunakan email dan password
+- Login dengan Google melalui endpoint backend
+- Forgot password dan reset password
+- Protected route untuk halaman dashboard, activity, insight, dan profile
 
-### 📝 Aktivitas Harian
-- Input 13 parameter aktivitas harian:
-  - Jam tidur, jam belajar, screen time, social media
-  - Aktivitas fisik, konsumsi kafein
-  - Skor mood, level kelelahan
-  - Beban tugas, tekanan deadline
-  - Interaksi sosial, kekhawatiran finansial, kondisi kesehatan
-- Otomatis memicu prediksi ML setelah submit
+### Landing Page
 
-### 🌐 Internasionalisasi
-- Dukungan **Bahasa Indonesia** dan **English**
-- Context-based language switching
+- Halaman publik untuk memperkenalkan CekTenang
+- Navigasi ke login/register
+- Preview fitur, cara kerja, manfaat, dan FAQ
+- Dark/light mode
 
-### 🌙 Tema
-- **Dark Mode** dan **Light Mode**
-- Persisted theme preference
+### Dashboard
 
----
+- Ringkasan skor stres terbaru
+- Statistik aktivitas dan prediksi
+- Grafik tren stres
+- Ringkasan jurnal terakhir
+- Kondisi akademik dan lifestyle berdasarkan data backend
 
-## 🤖 Machine Learning Service
+### Aktivitas Harian
 
-### Model yang Digunakan
+- Input data aktivitas harian mahasiswa
+- Simpan draft aktivitas
+- Submit aktivitas untuk diproses backend
+- Panel hasil analisis setelah prediksi tersedia
 
-| Model | Kegunaan |
-|---|---|
-| **TensorFlow Deep Neural Network** | Klasifikasi level stres (Low / Moderate / High) dengan arsitektur ResidualBlock + FocalLoss |
-| **LightGBM (model_cektenang_lgbm.pkl)** | Model alternatif untuk prediksi stres |
+Data aktivitas yang dikirim mencakup:
 
-### Endpoints ML Service
-
-| Endpoint | Method | Deskripsi |
-|---|---|---|
-| `/predict` | `POST` | Prediksi level stres berdasarkan 13 fitur aktivitas |
-| `/recommendations` | `POST` | Generate rekomendasi personal berdasarkan level stres & fitur |
-| `/insights` | `POST` | Generate insight harian/mingguan |
-| `/health` | `GET` | Cek status kesehatan semua service ML |
-
-### Fitur Input Model
-
-13 fitur yang dianalisis untuk prediksi:
-
-```
+```text
 sleep_hours, study_hours, screen_time_hours, social_media_hours,
 physical_activity_minutes, caffeine_intake_mg, mood_score,
 fatigue_level, assignment_load, deadline_pressure,
-social_interaction_score, financial_worry_score, health_condition_score
+social_interaction_score, financial_worry_score, health_condition_score,
+daily_note, activity_date, activity_status
+```
+
+### Riwayat Aktivitas
+
+- Menampilkan aktivitas selesai dan draft
+- Filter berdasarkan status dan periode tanggal
+- Sorting berdasarkan tanggal atau skor stres
+- Lanjutkan pengisian draft
+- Lihat detail aktivitas tertentu
+
+### Insights & Rekomendasi
+
+- Insight naratif dari tabel/backend `insights`
+- Prioritas hari ini dari endpoint `GET /recommendations`
+- Bagian prioritas tidak memakai data statis frontend
+- Jika tabel `recommendations` kosong, UI menampilkan empty state
+- Grafik aktivitas mingguan dan intensitas stres dari riwayat aktivitas/prediksi
+
+### Profile
+
+- Menampilkan informasi akun
+- Update nama lengkap
+- Update foto profil
+- Ganti password
+- Statistik akun berdasarkan riwayat analisis
+
+### Internasionalisasi
+
+- Bahasa Indonesia
+- English
+- Preferensi bahasa disimpan di `localStorage`
+
+### Tema
+
+- Light mode
+- Dark mode
+- Preferensi tema disimpan di `localStorage`
+
+---
+
+## Machine Learning Service
+
+Service Machine Learning tidak berada di repository ini.
+
+Alur ML saat ini:
+
+```text
+Frontend Web -> Backend API -> ML Service -> Backend API -> Frontend Web
+```
+
+Frontend tidak memanggil ML service secara langsung. Semua proses prediksi, insight, dan rekomendasi dilakukan melalui backend API.
+
+Data yang ditampilkan frontend berasal dari endpoint backend seperti:
+
+| Fitur | Sumber Data |
+|---|---|
+| Skor stres | `/predictions` |
+| Aktivitas | `/activities` |
+| Insight naratif | `/insights/latest` atau `/insights` |
+| Rekomendasi | `/recommendations` |
+| Dashboard | `/dashboard` |
+
+---
+
+## API Documentation
+
+Frontend menggunakan API backend lokal secara default:
+
+```text
+http://localhost:3000
+```
+
+Base URL dikonfigurasi di:
+
+```text
+api.config.js
+```
+
+Endpoint yang dipakai frontend:
+
+| Domain | Endpoint |
+|---|---|
+| Register | `POST /users` |
+| Login | `POST /authentications` |
+| Login Google | `POST /authentications/google` |
+| Logout | `DELETE /authentications` |
+| Forgot Password | `POST /authentications/forgot-password` |
+| Reset Password | `POST /authentications/reset-password` |
+| Profile | `GET /profiles/me` |
+| Dashboard | `GET /dashboard` |
+| Activities | `GET /activities`, `POST /activities`, `PUT /activities/:id`, `GET /activities/:id` |
+| Predictions | `GET /predictions` |
+| Insights | `GET /insights/latest`, `GET /insights` |
+| Recommendations | `GET /recommendations` |
+
+Jika backend dijalankan di environment lain, set:
+
+```env
+VITE_API_BASE_URL=https://domain-backend-kamu.com
 ```
 
 ---
 
-## 📖 API Documentation
+## Database
 
-Setelah backend berjalan, akses Swagger UI di:
+Database tidak berada di repository frontend ini.
 
-```
-http://localhost:3000/api-docs
-```
+Frontend hanya membaca dan mengirim data melalui backend API. Tabel yang relevan di backend:
 
-Dokumentasi lengkap mencakup semua **10 resource** dengan total **25+ endpoints**:
-- Users, Authentications, Profiles
-- Activities, Predictions
-- Weekly Summaries, Insights, Recommendations
-- Dashboard, Exports
-
-Lihat [stress-detector-api/README.md](./stress-detector-api/README.md) untuk detail endpoint lengkap.
-
----
-
-## 🗃️ Database
-
-### Teknologi
-- **PostgreSQL 14** — Database utama
-- **Redis 7** — Caching layer
-- **RabbitMQ** — Message queue untuk async email export
-
-### Entity Relationship Diagram
-
-Lihat diagram ERD lengkap di [`shared/ERD.png`](./shared/ERD.png).
-
-### Tabel Utama
-
-| Tabel | Deskripsi |
+| Tabel | Dipakai untuk |
 |---|---|
 | `users` | Data akun pengguna |
-| `authentications` | Refresh token storage |
+| `authentications` | Sesi dan refresh token |
+| `profiles` | Data profile pengguna |
 | `daily_activities` | Input aktivitas harian |
-| `stress_predictions` | Hasil prediksi ML |
-| `weekly_summaries` | Ringkasan metrik mingguan |
-| `insights` | AI-generated insights |
-| `recommendations` | Rekomendasi personal AI |
+| `stress_predictions` | Hasil prediksi stres |
+| `insights` | Insight naratif AI |
+| `recommendations` | Rekomendasi dan prioritas hari ini |
+
+Contoh: section **Prioritas Hari Ini** di halaman `/Insight` mengambil data dari tabel `recommendations` melalui endpoint backend. Jika tabel tersebut kosong, frontend tidak menampilkan rekomendasi palsu.
 
 ---
 
-## 🛡️ Keamanan
+## Keamanan
 
-- **JWT Authentication** — Access token (short-lived) + Refresh token (long-lived)
-- **Password Hashing** — bcrypt dengan salt rounds
-- **Input Validation** — Joi schema validation pada setiap endpoint
-- **Rate Limiting** — express-rate-limit untuk mencegah abuse
-- **CORS** — Konfigurasi cross-origin yang tepat
-- **Secure File Upload** — Validasi tipe file + resize dengan Sharp
+Bagian keamanan yang ditangani frontend:
 
----
+- Menyimpan `accessToken` dan `refreshToken` di `localStorage`
+- Menambahkan header `Authorization: Bearer <accessToken>` pada request API
+- Redirect ke `/login` saat backend mengembalikan status `401`
+- Melindungi halaman private dengan `ProtectedRoute`
+- Tidak menyimpan secret backend di source frontend
 
-## 📧 Fitur Export Email
-
-Menggunakan arsitektur **message queue** (RabbitMQ):
-
-1. User request export → API publish message ke RabbitMQ
-2. Background consumer process mengambil message
-3. Consumer mengambil data dari database
-4. Nodemailer mengirim email berformat HTML ke user
-
-Tersedia untuk:
-- **Laporan prediksi harian**
-- **Ringkasan mingguan**
+Bagian keamanan seperti password hashing, validasi token, CORS, dan rate limiting ditangani oleh backend API.
 
 ---
 
-## 🧰 Tech Stack Ringkasan
+## Fitur Export Email
 
-### Backend (stress-detector-api)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+Fitur export email tidak diimplementasikan langsung di frontend repository ini.
 
-### Frontend (stress-detector-web)
+Jika backend menyediakan fitur export, frontend dapat menambahkan tombol/flow yang memanggil endpoint backend terkait. Pengiriman email, queue, dan pemrosesan laporan tetap menjadi tanggung jawab backend.
+
+---
+
+## Tech Stack Ringkasan
+
+### Frontend
+
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![React Router](https://img.shields.io/badge/React_Router_7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-FF6384?style=flat-square&logo=recharts&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)
+![Lucide](https://img.shields.io/badge/Lucide_React-000000?style=flat-square&logo=lucide&logoColor=white)
 
-### Machine Learning (stress-detector-ml)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white)
+### Development Tools
+
+![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white)
+![PostCSS](https://img.shields.io/badge/PostCSS-DD3A0A?style=flat-square&logo=postcss&logoColor=white)
+
+### External Services
+
+![Railway](https://img.shields.io/badge/Railway-Backend_API-0B0D0E?style=flat-square&logo=railway&logoColor=white)
 
 ---
 
-## 👥 Tim Pengembang
+## Deployment
 
-Capstone Project — **DBS Camp Dicoding**
+Frontend ini dapat dideploy sebagai static site.
+
+### Build Command
+
+```bash
+npm run build
+```
+
+### Output Directory
+
+```text
+dist
+```
+
+### Environment Variable
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+Untuk memakai backend production Railway, gunakan:
+
+```env
+VITE_API_BASE_URL=https://student-stress-detector-backend-production.up.railway.app
+```
+
+Contoh platform deployment:
+
+- Vercel
+- Netlify
+- Railway Static
+- Render Static Site
+- Nginx/static hosting lain
+
+Pastikan backend mengizinkan origin domain frontend melalui konfigurasi CORS.
 
 ---
 
-## 📄 Lisensi
+## Tim Pengembang
+
+Capstone Project - DBS Camp Dicoding
+
+---
+
+## Lisensi
 
 ISC

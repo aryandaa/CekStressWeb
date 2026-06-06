@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { createActivity, updateActivity, getActivityById, getActivityHistory } from "../../services/activityService";
+import {
+  createActivity,
+  updateActivity,
+  getActivityById,
+  getActivityHistory,
+  getPredictionByActivityId,
+} from "../../services/activityService";
 import { activityNumberFields, createInitialActivityForm } from "./activityFormConstants";
 import buildActivityPayload, { activityHasInput } from "./buildActivityPayload";
 
@@ -37,8 +43,13 @@ async function waitForPrediction(activityId) {
   }
 
   for (let attempt = 0; attempt < AI_POLL_MAX_ATTEMPTS; attempt += 1) {
-    const historyResult = await getActivityHistory();
+    const predictionResult = await getPredictionByActivityId(activityId);
 
+    if (!predictionResult.error && predictionResult.data) {
+      return predictionResult.data;
+    }
+
+    const historyResult = await getActivityHistory();
     if (!historyResult.error) {
       const matched = historyResult.data.find(
         (item) => String(item.id) === String(activityId) && item.prediction,
@@ -170,7 +181,10 @@ function useActivityForm(t, initialData = null, activityId = null, options = {})
       }
 
       const resultActivityId = result.data?.activity?.id || activityId;
-      const prediction = result.data?.prediction || await waitForPrediction(resultActivityId);
+      const prediction =
+        result.data?.prediction ||
+        result.data?.stressPrediction ||
+        await waitForPrediction(resultActivityId);
 
       setAnalysisPrediction(prediction);
       setMessage(result.message || t.ActivitySuccessMessage);

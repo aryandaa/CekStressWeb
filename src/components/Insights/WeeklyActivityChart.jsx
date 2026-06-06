@@ -9,17 +9,7 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import PropTypes from "prop-types";
 
-const fallbackData = [
-  { day: "SEN", value: 58 },
-  { day: "SEL", value: 55 },
-  { day: "RAB", value: 60 },
-  { day: "KAM", value: 74 },
-  { day: "JUM", value: 57 },
-  { day: "SAB", value: 54 },
-  { day: "MIN", value: 62 },
-];
-
-function WeeklyActivityChart({ data = fallbackData, title = "Metrik Aktivitas Mingguan" }) {
+function WeeklyActivityChart({ data = [], title = "Metrik Aktivitas Mingguan" }) {
   const { theme } = useTheme();
   const rootStyle = typeof window !== "undefined"
     ? getComputedStyle(document.documentElement)
