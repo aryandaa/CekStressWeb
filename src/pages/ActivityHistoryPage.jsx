@@ -183,9 +183,19 @@ function ActivityHistoryPage() {
       })
       .sort((a, b) => {
         if (sortOption === "newest") {
+          const dateA = a.predictionDate || "";
+          const dateB = b.predictionDate || "";
+          if (dateA !== dateB) {
+            return dateB.localeCompare(dateA);
+          }
           return b.datetime - a.datetime;
         }
         if (sortOption === "oldest") {
+          const dateA = a.predictionDate || "";
+          const dateB = b.predictionDate || "";
+          if (dateA !== dateB) {
+            return dateA.localeCompare(dateB);
+          }
           return a.datetime - b.datetime;
         }
         if (sortOption === "highest-score") {
@@ -236,7 +246,7 @@ function ActivityHistoryPage() {
           {t.ActivityHistoryDescription}
         </p>
 
-        <div className="space-y-6 rounded-3xl p6">
+        <div className="space-y-6 rounded-3xl p-6">
           <ActivityHistoryFilters
             statusFilter={statusFilter}
             setStatusFilter={handleStatusFilter}

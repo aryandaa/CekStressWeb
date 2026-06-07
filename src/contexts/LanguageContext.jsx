@@ -26,7 +26,7 @@ const translations = {
     CloseButton: "Tutup",
     DashboardDateLocale: "id-ID",
     MinuteText: "Mnt",
-    PriorityTodayTitle: "Rekomendasi",
+    PriorityTodayTitle: "Rekomendasi Aktivitas",
     LongTermTitle: "Saran Jangka Panjang",
 
     // LeftPanel
@@ -73,7 +73,7 @@ const translations = {
 
     // Sidebar
     ActSdbr: "Riwayat Aktivitas",
-    CekStresSdbr: "Summary",
+    CekStresSdbr: "Ringkasan",
     ReqomendationSdbr: "Rekomendasi",
     ProfileSdbr: "Profile Saya",
     StressCheck: "Cek Stres",
@@ -150,6 +150,8 @@ const translations = {
     ActivityTodayStatusTitle: "Status Hari Ini",
     ActivityAnalysisTag: "Analisis",
     ActivityStressRiskHigh: "Risiko Stres Tinggi",
+    ActivityGoToSummaryButton: "Ke Halaman Ringkasan",
+    ActivityCloseButton: "Tutup",
 
     // Dashboard Pages
     HighestStressScoreTitle: "Stress Score Tertinggi",
@@ -204,13 +206,13 @@ const translations = {
     ActivityHistoryNext: "Berikutnya",
 
     // Insights Page
-    AINarrativeInsightTitle: "Insight Naratif AI",
-    AINarrativeInsightSubtitle: "Berikut insight untuk minggu ini",
+    AINarrativeInsightTitle: "Ringkasan Naratif AI",
+    AINarrativeInsightSubtitle: "Berikut ringkasan untuk minggu ini",
     InsightsPageTitle: "Ringkasan",
-    InsightsEyebrow: "Summary & Analitik Mingguan",
-    InsightsHeroTitle: "Summary Akademik & Lifestyle",
-    InsightsLoading: "Memuat data insights...",
-    InsightsFetchError: "Gagal memuat data insights.",
+    InsightsEyebrow: "Ringkasan & Analitik Akademik",
+    InsightsHeroTitle: "Ringkasan Akademik & Lifestyle",
+    InsightsLoading: "Memuat data ringkasan...",
+    InsightsFetchError: "Gagal memuat data ringkasan.",
     InsightsLatestData: "Data terakhir",
     InsightsNoData: "Belum ada data",
     InsightsTrendUp: "naik",
@@ -224,9 +226,9 @@ const translations = {
     InsightsDeadlinePressureLabel: "TEKANAN DEADLINE",
     InsightsPhysicalActivityLabel: "AKTIVITAS FISIK",
     InsightsAverageSleepLabel: "TIDUR (RATA-RATA)",
-    InsightsLatestFromDatabase: "Insight terbaru dari database",
-    InsightsFallbackWithData: "Dalam {count} catatan selesai terakhir pada rentang 7 hari ini, rata-rata stres berada di {stressScore}/100. Rata-rata tidur {sleepHours} jam, beban tugas {taskLoad}%, dan aktivitas fisik {physicalActivity} menit. Insight akan diperbarui dari database setelah AI menyimpan data terbaru.",
-    InsightsFallbackNoData: "Belum ada catatan aktivitas selesai untuk dianalisis. Isi jurnal harian terlebih dahulu agar insight dan rekomendasi bisa diperbarui dari database.",
+    InsightsLatestFromDatabase: "Ringkasan terbaru dari database",
+    InsightsFallbackWithData: "Dalam {count} catatan selesai terakhir pada rentang 7 hari ini, rata-rata stres berada di {stressScore}/100. Rata-rata tidur {sleepHours} jam, beban tugas {taskLoad}%, dan aktivitas fisik {physicalActivity} menit. Ringkasan akan diperbarui dari database setelah AI menyimpan data terbaru.",
+    InsightsFallbackNoData: "Belum ada catatan aktivitas selesai untuk dianalisis. Isi jurnal harian terlebih dahulu agar ringkasan dan rekomendasi bisa diperbarui dari database.",
     InsightsNoPriorityToday: "Tidak ada rekomendasi.",
     InsightsNoLongTermSuggestions: "Tidak ada saran jangka panjang.",
     // prediksi stress
@@ -431,6 +433,8 @@ const translations = {
     ActivityTodayStatusTitle: "Today's Status",
     ActivityAnalysisTag: "Analysis",
     ActivityStressRiskHigh: "High Stress Risk",
+    ActivityGoToSummaryButton: "Go to Summary",
+    ActivityCloseButton: "Close",
 
     // Dashboard Page
     DashboardGreeting: "Good Morning, ",
@@ -485,13 +489,13 @@ const translations = {
     ActivityHistoryNext: "Next",
    
     // Insights Page
-    AINarrativeInsightTitle: "AI Narrative Insight",
-    AINarrativeInsightSubtitle: "Here are insights for this week",
+    AINarrativeInsightTitle: "AI Narrative Summary",
+    AINarrativeInsightSubtitle: "Here are summaries for this week",
     InsightsPageTitle: "Summary",
-    InsightsEyebrow: "Weekly Summary & Analytics",
+    InsightsEyebrow: "Summary & Academic Analytics",
     InsightsHeroTitle: "Academic & Lifestyle Summary",
-    InsightsLoading: "Loading insights data...",
-    InsightsFetchError: "Failed to load insights data.",
+    InsightsLoading: "Loading summary data...",
+    InsightsFetchError: "Failed to load summary data.",
     InsightsLatestData: "Latest data",
     InsightsNoData: "No data yet",
     InsightsTrendUp: "up",
@@ -505,9 +509,9 @@ const translations = {
     InsightsDeadlinePressureLabel: "DEADLINE PRESSURE",
     InsightsPhysicalActivityLabel: "PHYSICAL ACTIVITY",
     InsightsAverageSleepLabel: "SLEEP (AVERAGE)",
-    InsightsLatestFromDatabase: "Latest insight from database",
-    InsightsFallbackWithData: "Across the last {count} completed records in this 7-day range, average stress is {stressScore}/100. Average sleep is {sleepHours} hours, task load is {taskLoad}%, and physical activity is {physicalActivity} minutes. Insights will update from the database after AI saves the latest data.",
-    InsightsFallbackNoData: "No completed activity records are available for analysis yet. Fill in your daily journal first so insights and recommendations can be updated from the database.",
+    InsightsLatestFromDatabase: "Latest summary from database",
+    InsightsFallbackWithData: "Across the last {count} completed records in this 7-day range, average stress is {stressScore}/100. Average sleep is {sleepHours} hours, task load is {taskLoad}%, and physical activity is {physicalActivity} minutes. Summary will update from the database after AI saves the latest data.",
+    InsightsFallbackNoData: "No completed activity records are available for analysis yet. Fill in your daily journal first so summary and recommendations can be updated from the database.",
     InsightsNoPriorityToday: "No recommendations.",
     InsightsNoLongTermSuggestions: "No long-term suggestions yet.",
     // prediksi stress

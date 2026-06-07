@@ -169,9 +169,14 @@ export const getActivityHistory = async () => {
         prediction: null,
       }));
 
-    const history = [...completedHistory, ...draftHistory].sort(
-      (a, b) => b.datetime - a.datetime,
-    );
+    const history = [...completedHistory, ...draftHistory].sort((a, b) => {
+      const dateA = a.predictionDate || "";
+      const dateB = b.predictionDate || "";
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      return b.datetime - a.datetime;
+    });
 
     return {
       error: false,

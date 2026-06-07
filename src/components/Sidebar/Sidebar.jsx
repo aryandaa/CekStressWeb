@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, NavLink } from "react-router-dom";
 import SidebarItem from "./SidebarItem";
@@ -14,7 +15,9 @@ function Sidebar({ isOpen, setIsOpen }) {
   const { setUser } = useUser();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const executeLogout = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
 
     try {
@@ -29,6 +32,10 @@ function Sidebar({ isOpen, setIsOpen }) {
     localStorage.removeItem("refreshToken");
     setUser({ fullname: "", email: "", role: "", profileImage: null, createdAt: null });
     navigate("/login", { replace: true });
+  };
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
   return (
@@ -221,6 +228,57 @@ function Sidebar({ isOpen, setIsOpen }) {
 
         </nav>
       </aside>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs px-4">
+          <div className="theme-card w-full max-w-sm rounded-3xl border p-6 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="theme-text text-xl font-bold">
+              {t.DashboardDateLocale === "id-ID" ? "Keluar dari Akun?" : "Log Out of Account?"}
+            </h3>
+            <p className="theme-muted mt-2 text-sm leading-relaxed">
+              {t.DashboardDateLocale === "id-ID" 
+                ? "Apakah Anda yakin ingin keluar? Anda perlu masuk kembali untuk mengakses catatan aktivitas dan riwayat tingkat stres Anda."
+                : "Are you sure you want to log out? You will need to log back in to access your activity logs and stress history."}
+            </p>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="theme-card-muted h-12 flex-1 rounded-xl border px-4 text-sm font-semibold transition theme-hover"
+              >
+                {t.DashboardDateLocale === "id-ID" ? "Batal" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={executeLogout}
+                className="h-12 flex-1 rounded-xl bg-red-500 text-white text-sm font-bold shadow-md shadow-red-500/20 transition hover:bg-red-600 hover:shadow-lg"
+              >
+                {t.DashboardDateLocale === "id-ID" ? "Keluar" : "Log Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

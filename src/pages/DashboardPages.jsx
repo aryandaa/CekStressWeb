@@ -166,7 +166,14 @@ function DashboardPage() {
         }
 
         const history = historyResponse.data || [];
-        const sortedHistory = [...history].sort((a, b) => b.datetime - a.datetime);
+        const sortedHistory = [...history].sort((a, b) => {
+          const dateA = a.predictionDate || "";
+          const dateB = b.predictionDate || "";
+          if (dateA !== dateB) {
+            return dateB.localeCompare(dateA);
+          }
+          return b.datetime - a.datetime;
+        });
         const todayStartDate = addDays(today, -6);
         const todayStartDateKey = getLocalDateKey(todayStartDate);
         const todayDateKey = getLocalDateKey(today);
@@ -240,32 +247,31 @@ function DashboardPage() {
   const moodScore = getNumberField(currentActivity, "mood_score", "moodScore");
   const fatigueLevel = getNumberField(currentActivity, "fatigue_level", "fatigueLevel");
   const screenTime = getNumberField(currentActivity, "screen_time_hours", "screenTimeHours");
-  const socialMedia = getNumberField(currentActivity, "social_media_hours", "socialMediaHours");
   const physicalActivity = getNumberField(currentActivity, "physical_activity_minutes", "physicalActivityMinutes");
   const sleepHours = getNumberField(currentActivity, "sleep_hours", "sleepHours");
   const conditionItems = [
     {
       label: t.MoodScoreTitle,
       metric: {
-        display: moodScore.toString(),
-        width: Math.min(moodScore, 100),
+        display: `${moodScore}/10`,
+        width: Math.min(moodScore * 10, 100),
         color:
-          moodScore <= 25
-            ? "bg-green-500"
-            : moodScore <= 65
+          moodScore <= 3
+            ? "bg-red-500"
+            : moodScore <= 6
             ? "bg-yellow-500"
-            : "bg-red-500",
+            : "bg-green-500",
       },
     },
     {
       label: t.FatigueLevelTitle,
       metric: {
-        display: fatigueLevel.toString(),
-        width: Math.min(fatigueLevel, 100),
+        display: `${fatigueLevel}/10`,
+        width: Math.min(fatigueLevel * 10, 100),
         color:
-          fatigueLevel < 40
+          fatigueLevel <= 3
             ? "bg-green-500"
-            : fatigueLevel < 70
+            : fatigueLevel <= 6
             ? "bg-yellow-500"
             : "bg-red-500",
       },
@@ -276,22 +282,9 @@ function DashboardPage() {
         display: `${screenTime} ${t.HourText}`,
         width: Math.min((screenTime / 24) * 100, 100),
         color:
-          screenTime < 4
+          screenTime < 3
             ? "bg-green-500"
-            : screenTime < 8
-            ? "bg-yellow-500"
-            : "bg-red-500",
-      },
-    },
-    {
-      label: t.SocialMediaTitle,
-      metric: {
-        display: `${socialMedia} ${t.HourText}`,
-        width: Math.min((socialMedia / 24) * 100, 100),
-        color:
-          socialMedia < 2
-            ? "bg-green-500"
-            : socialMedia < 4
+            : screenTime <= 6
             ? "bg-yellow-500"
             : "bg-red-500",
       },
@@ -302,7 +295,7 @@ function DashboardPage() {
         display: `${physicalActivity} ${t.MinuteText}`,
         width: Math.min((physicalActivity / 60) * 100, 100),
         color:
-          physicalActivity >= 30
+          physicalActivity > 45
             ? "bg-green-500"
             : physicalActivity >= 15
             ? "bg-yellow-500"
@@ -315,11 +308,11 @@ function DashboardPage() {
         display: `${sleepHours} ${t.HourText}`,
         width: Math.min((sleepHours / 8) * 100, 100),
         color:
-          sleepHours >= 7
+          sleepHours < 6
+            ? "bg-red-500"
+            : sleepHours <= 8
             ? "bg-green-500"
-            : sleepHours >= 5
-            ? "bg-yellow-500"
-            : "bg-red-500",
+            : "bg-yellow-500",
       },
     },
   ];
@@ -356,146 +349,212 @@ function DashboardPage() {
       </p>
     </div>
 
-    {/* Cards */}
-      <div className="col-span-1 lg:col-span-4">
-        <div className="theme-card rounded-2xl p-5 border">
-          <div className="flex items-center gap-4">
-            
-            {/* Icon */}
-            <div className="flex-shrink-0">
-              <img
-                src={calender}
-                alt="calendar"
-                className={`w-8 h-8 ${theme === "dark" ? "invert" : ""}`}
-              />
+    {!currentActivity ? (
+      <div className="col-span-1 lg:col-span-4 py-8">
+        <div className="theme-card border rounded-3xl p-8 md:p-12 text-center space-y-6 max-w-3xl mx-auto shadow-xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 text-blue-400 animate-pulse"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
             </div>
+          </div>
+          
+          <div className="space-y-3">
+            <h2 className="theme-text text-2xl md:text-3xl font-extrabold">
+              {t.DashboardDateLocale === "id-ID" ? "Mulai Pantau Stres Anda!" : "Start Tracking Your Stress!"}
+            </h2>
+            <p className="theme-muted text-sm md:text-base leading-relaxed max-w-xl mx-auto">
+              {t.DashboardDateLocale === "id-ID"
+                ? "Dapatkan analisis tingkat stres akademik, produktivitas belajar, kualitas tidur, dan rekomendasi personal berbasis AI dengan mengisi jurnal harian Anda."
+                : "Get insights into your academic stress levels, study productivity, sleep quality, and personalized AI-driven recommendations by filling out your daily journal."}
+            </p>
+          </div>
 
-              {/* Text */}
-            <div>
-              <h2 className="theme-text text-sm md:text-lg font-bold">
-                {paramActivityId ? t.DetailJournalSummaryTitle : t.LastJournalSummaryTitle}
-              </h2>
+          <div className="pt-2">
+            <button
+              onClick={() => navigate("/LogActivity")}
+              className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-bold text-sm transition hover:bg-blue-600 shadow-lg shadow-blue-500/25 cursor-pointer"
+            >
+              {t.DashboardDateLocale === "id-ID" ? "+ Mulai Isi Jurnal Hari Ini" : "+ Start Journaling Today"}
+            </button>
+          </div>
 
-              <p className="theme-muted text-sm mt-1">
-                {currentActivityFormattedDate || t.DashboardNoActivityRecorded}
-              </p>
+          <div className="pt-6 border-t border-(--border-soft) grid grid-cols-2 md:grid-cols-4 gap-4 text-left max-w-2xl mx-auto">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold theme-muted uppercase tracking-wider">📊 Pantau Stres</p>
+              <p className="text-[11px] theme-subtle">Kalkulasi skor stres berkala.</p>
             </div>
-
+            <div className="space-y-1">
+              <p className="text-xs font-semibold theme-muted uppercase tracking-wider">📚 Beban Belajar</p>
+              <p className="text-[11px] theme-subtle">Monitor waktu belajar & deadline.</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold theme-muted uppercase tracking-wider">🛌 Kualitas Tidur</p>
+              <p className="text-[11px] theme-subtle">Analisis hubungan tidur & produktivitas.</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold theme-muted uppercase tracking-wider">💡 Rekomendasi AI</p>
+              <p className="text-[11px] theme-subtle">Tips personal kelola keseimbangan hidup.</p>
+            </div>
           </div>
         </div>
       </div>
-
-    {/* Lengkapi catatan */}
-    {draftActivity && (
-      <div className="col-span-1 lg:col-span-4">
-        <div className="theme-card border border-orange-500/40 rounded-xl px-6 py-5">
-          <div className="flex items-center justify-between">
-            
-            {/* Left Content */}
+    ) : (
+      <>
+        {/* Cards */}
+        <div className="col-span-1 lg:col-span-4">
+          <div className="theme-card rounded-2xl p-5 border">
             <div className="flex items-center gap-4">
               
-              {/* Icon Box */}
-              <div className="w-10 h-10 rounded-md bg-orange-400 flex items-center justify-center">
+              {/* Icon */}
+              <div className="shrink-0">
                 <img
                   src={calender}
                   alt="calendar"
-                  className="w-5 h-5 opacity-80"
+                  className={`w-8 h-8 ${theme === "dark" ? "invert" : ""}`}
                 />
               </div>
-
+  
               {/* Text */}
               <div>
-                <h2 className="text-orange-400 font-semibold text-lg">
-                  Catatan Aktivitas Belum Lengkap
+                <h2 className="theme-text text-sm md:text-lg font-bold">
+                  {paramActivityId ? t.DetailJournalSummaryTitle : t.LastJournalSummaryTitle}
                 </h2>
-
+  
                 <p className="theme-muted text-sm mt-1">
-                  Lengkapi catatan aktivitas agar data diperbarui.
+                  {currentActivityFormattedDate || t.DashboardNoActivityRecorded}
                 </p>
               </div>
+  
             </div>
-
-            {/* Button */}
-            <button
-              onClick={handleViewDraftDetail}
-              className="
-                bg-orange-400
-                hover:bg-orange-500
-                text-black
-                font-medium
-                px-6
-                py-3
-                rounded-md
-                transition-colors
-              "
-            >
-              Lihat Detail
-            </button>
           </div>
         </div>
-      </div>
-    )}
 
-    {/* Data Cards */}
-      <Datas
-        metric="Stress"
-        title={t.StressScoreTitle}
-        value={stressScore.toString()}
-      />
-      <Datas
-        metric="StudyTime"
-        title={t.StudyTimeTitle}
-        value={studyHours.toString()}
-      />
-      <Datas
-        metric="DeadlinePressure"
-        title={t.DeadlinePressureTitle}
-        value={Math.round(normalizePercent(deadlinePressure)).toString()}
-      />
-      <Datas
-        metric="TaskLoad"
-        title={t.TaskLoadTitle}
-        value={Math.round(normalizePercent(taskLoad)).toString()}
-      />
+        {/* Lengkapi catatan */}
+        {draftActivity && (
+          <div className="col-span-1 lg:col-span-4">
+            <div className="theme-card border border-orange-500/40 rounded-xl px-6 py-5">
+              <div className="flex items-center justify-between">
+                
+                {/* Left Content */}
+                <div className="flex items-center gap-4">
+                  
+                  {/* Icon Box */}
+                  <div className="w-10 h-10 rounded-md bg-orange-400 flex items-center justify-center">
+                    <img
+                      src={calender}
+                      alt="calendar"
+                      className="w-5 h-5 opacity-80"
+                    />
+                  </div>
+  
+                  {/* Text */}
+                  <div>
+                    <h2 className="text-orange-400 font-semibold text-lg">
+                      Catatan Aktivitas Belum Lengkap
+                    </h2>
+  
+                    <p className="theme-muted text-sm mt-1">
+                      Lengkapi catatan aktivitas agar data diperbarui.
+                    </p>
+                  </div>
+                </div>
+  
+                {/* Button */}
+                <button
+                  onClick={handleViewDraftDetail}
+                  className="
+                    bg-orange-400
+                    hover:bg-orange-500
+                    text-black
+                    font-medium
+                    px-6
+                    py-3
+                    rounded-md
+                    transition-colors
+                  "
+                >
+                  Lihat Detail
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-
-    {/* Chart */}
-    <div className="col-span-1 lg:col-span-3">
-      <StressChart data={stressTrendData} />
-    </div>
-
-    {/* Side Panel */}
-    <div className="theme-card rounded-2xl p-5 md:p-6">
-      <h2 className="theme-text text-lg md:text-sm font-semibold mb-6">
-        Kondisi
-      </h2>
-
-      <TodayDiagnose
-        items={conditionItems}
-      />
-    </div>
-
-    <div className="col-span-1 lg:col-span-4">
-      <div className="theme-card-muted rounded-2xl border p-5">
-        <div className="mb-4">
-          <p className="theme-text text-lg font-semibold">{t.DashboardDailyNoteTitle}</p>
-          <p className="theme-muted mt-2 text-sm leading-relaxed">
-            {t.DashboardDailyNoteDescription}
-          </p>
-        </div>
-
-        <textarea
-          readOnly
-          value={currentActivity?.note || ""}
-          placeholder={t.DashboardDailyNotePlaceholder}
-          className="theme-input min-h-45 w-full resize-none rounded-2xl border p-4 text-sm outline-none"
+        {/* Data Cards */}
+        <Datas
+          metric="Stress"
+          title={t.StressScoreTitle}
+          value={stressScore.toString()}
+        />
+        <Datas
+          metric="StudyTime"
+          title={t.StudyTimeTitle}
+          value={studyHours.toString()}
+        />
+        <Datas
+          metric="DeadlinePressure"
+          title={t.DeadlinePressureTitle}
+          value={Math.round(normalizePercent(deadlinePressure)).toString()}
+        />
+        <Datas
+          metric="TaskLoad"
+          title={t.TaskLoadTitle}
+          value={Math.round(normalizePercent(taskLoad)).toString()}
         />
 
-        <div className="theme-subtle mt-3 text-right text-xs">
-          {(currentActivity?.note || "").length}/1000
+
+        {/* Chart */}
+        <div className="col-span-1 lg:col-span-3">
+          <StressChart data={stressTrendData} />
         </div>
-      </div>
-    </div>
+
+        {/* Side Panel */}
+        <div className="theme-card rounded-2xl p-5 md:p-6">
+          <h2 className="theme-text text-lg md:text-sm font-semibold mb-6">
+            Kondisi
+          </h2>
+  
+          <TodayDiagnose
+            items={conditionItems}
+          />
+        </div>
+
+        <div className="col-span-1 lg:col-span-4">
+          <div className="theme-card-muted rounded-2xl border p-5">
+            <div className="mb-4">
+              <p className="theme-text text-lg font-semibold">{t.DashboardDailyNoteTitle}</p>
+              <p className="theme-muted mt-2 text-sm leading-relaxed">
+                {t.DashboardDailyNoteDescription}
+              </p>
+            </div>
+  
+            <textarea
+              readOnly
+              value={currentActivity?.note || ""}
+              placeholder={t.DashboardDailyNotePlaceholder}
+              className="theme-input min-h-45 w-full resize-none rounded-2xl border p-4 text-sm outline-none"
+            />
+  
+            <div className="theme-subtle mt-3 text-right text-xs">
+              {(currentActivity?.note || "").length}/1000
+            </div>
+          </div>
+        </div>
+      </>
+    )}
 
   </div>
 </Layout>
