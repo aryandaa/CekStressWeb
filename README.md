@@ -20,10 +20,10 @@
 
 Repository ini sekarang hanya berisi **frontend web**. Backend API, database, dan service Machine Learning sudah dipisah ke repository/deployment masing-masing.
 
-Frontend ini mengonsumsi backend lokal berikut secara default:
+Frontend ini mengonsumsi backend production berikut secara default:
 
 ```text
-http://localhost:3000
+https://cektenang-backend-production.up.railway.app/
 ```
 
 Fitur utama frontend:
@@ -46,8 +46,8 @@ Fitur utama frontend:
 +---------------------------+        HTTPS/API        +-----------------------------------------------+
 |  stress-detector-web      | ----------------------> |  Deployed Backend API                         |
 |                           |                         |  Railway                                      |
-|  React + Vite             |                         |  http://localhost:3000                       |
-|  TailwindCSS              |                         |  atau backend production Railway             |
+|  React + Vite             |                         |  Railway production backend                  |
+|  TailwindCSS              |                         |  atau backend lokal via VITE_API_BASE_URL    |
 |  React Router             |                         |                                               |
 |  Axios / Fetch client     |                         |  Auth, Activities, Predictions, Insights,     |
 |                           |                         |  Recommendations, Profiles, Dashboard         |
@@ -146,7 +146,7 @@ cp .env.example .env
 Isi `.env` untuk menentukan backend yang dipakai:
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000
+VITE_API_BASE_URL=https://cektenang-backend-production.up.railway.app/
 ```
 
 Jika `.env` tidak dibuat, aplikasi tetap memakai default production backend dari `api.config.js`.
@@ -289,10 +289,10 @@ Data yang ditampilkan frontend berasal dari endpoint backend seperti:
 
 ## API Documentation
 
-Frontend menggunakan API backend lokal secara default:
+Frontend menggunakan API backend production secara default:
 
 ```text
-http://localhost:3000
+https://cektenang-backend-production.up.railway.app/
 ```
 
 Base URL dikonfigurasi di:
@@ -412,13 +412,13 @@ dist
 ### Environment Variable
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000
+VITE_API_BASE_URL=https://cektenang-backend-production.up.railway.app/
 ```
 
 Untuk memakai backend production Railway, gunakan:
 
 ```env
-VITE_API_BASE_URL=https://student-stress-detector-backend-production.up.railway.app
+VITE_API_BASE_URL=https://cektenang-backend-production.up.railway.app/
 ```
 
 Contoh platform deployment:
